@@ -1,5 +1,8 @@
 
-function toRange(start, stop, step) {
+var utils = module.exports;
+
+// TODO: publish as lib
+utils.toRange = function toRange(start, stop, step) {
   step = step || 1;
   var arr = new Array((stop - start) / step);
   var num = 0;
@@ -8,6 +11,4 @@ function toRange(start, stop, step) {
     arr[num++] = i;
   }
   return arr;
-}
-
-module.exports = toRange;
+};
