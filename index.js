@@ -7,14 +7,12 @@
 
 'use strict';
 
-// var padLeft = require('pad-left');
 var repeat = require('repeat-string');
 var isNumber = require('is-number');
-var unique = require('array-unique');
 
-function toRegex(min, max) {
+function toRegexRange(min, max) {
   if (isNumber(min) === false) {
-    throw new TypeError('toRegex: first argument is invalid.');
+    throw new TypeError('toRegexRange: first argument is invalid.');
   }
 
   if (typeof max === 'undefined') {
@@ -22,14 +20,26 @@ function toRegex(min, max) {
   }
 
   if (isNumber(max) === false) {
-    throw new TypeError('toRegex: second argument is invalid.');
+    throw new TypeError('toRegexRange: second argument is invalid.');
+  }
+
+  if (min === max) {
+    return min;
   }
 
   min = min.toString();
   max = max.toString();
+  var aPad, bPad;
 
-  if (min === max) {
-    return min;
+  var zeros = 0;
+  if (min.length > 1 && (zeros = /^0+/.exec(min))) {
+    aPad = zeros[0].length;
+    min = min.slice(aPad);
+  }
+
+  if (max.length > 1 && (zeros = /^0+/.exec(max))) {
+    bPad = zeros[0].length;
+    max = max.slice(bPad);
   }
 
   var positives = [];
@@ -48,24 +58,29 @@ function toRegex(min, max) {
 
   if (max >= 0) {
     positives = splitToPatterns(min, max);
-    // console.log(positives)
   }
 
   var onlyNegative = filterPatterns(negatives, positives, '-');
   var onlyPositive = filterPatterns(positives, negatives, '');
-  var intersected = addPatterns(negatives, positives, '-?');
-
+  var intersected = filterPatterns(negatives, positives, '-?', true);
   var subpatterns = onlyNegative.concat(intersected || []).concat(onlyPositive || []);
+  var pad, res;
+
+  if (pad = ((aPad || bPad) ? (aPad > bPad ? aPad : bPad) : null)) {
+    var padding = repeat('0', pad);
+    res = subpatterns.join('|' + padding);
+    return padding + '(?:' + res + ')';
+  }
   return subpatterns.join('|');
 }
 
 function splitToRanges(min, max) {
-  var stops = [+max];
-
-  var nines = 1;
-  var stop = +countNines(min, nines);
   min = +min;
   max = +max;
+
+  var nines = 1;
+  var stops = [max];
+  var stop = +countNines(min, nines);
 
   while (min <= stop && stop <= max) {
     stops = add(stops, stop);
@@ -76,7 +91,7 @@ function splitToRanges(min, max) {
   var zeros = 1;
   stop = countZeros(max + 1, zeros) - 1;
 
-  while (min < stop && stop <= +max) {
+  while (min < stop && stop <= max) {
     stops = add(stops, stop);
     zeros += 1;
     stop = countZeros(max + 1, zeros) - 1;
@@ -84,49 +99,6 @@ function splitToRanges(min, max) {
 
   stops.sort(compare);
   return stops;
-}
-
-function compare(a, b) {
-  return a - b;
-}
-
-function add(arr, ele) {
-  if (arr.indexOf(ele) === -1) {
-    arr.unshift(ele);
-  }
-  return arr;
-}
-
-function countNines(num, len) {
-  return String(num).slice(0, -len) + repeat('9', len);
-}
-
-function countZeros(integer, zerosCount) {
-  return integer - (integer % Math.pow(10, zerosCount));
-}
-
-function toBraces(str) {
-  return '{' + str + '}';
-}
-
-function range(a, b) {
-  return chars(a + '-' + b);
-}
-
-function chars(str) {
-  return '[' + str + ']';
-}
-
-function isSame(str) {
-  if (str.charAt(0) === '-') {
-    str = str.slice(1);
-  }
-  return /^(.)\1+$/.test(str);
-}
-
-function areSimilar(a, b) {
-  return isSame(a) && isSame(b)
-    && a.length === b.length;
 }
 
 function rangeToPattern(start, stop) {
@@ -145,7 +117,7 @@ function rangeToPattern(start, stop) {
       pattern += startDigit;
 
     } else if (startDigit !== '0' || stopDigit !== '9') {
-      pattern += range(startDigit, stopDigit);
+      pattern += rangify(startDigit, stopDigit);
 
     } else {
       digits += 1;
@@ -189,8 +161,6 @@ function zip(a, b) {
 
 function splitToPatterns(min, max) {
   var ranges = splitToRanges(min, max);
-
-  // var ranges2 = rangeToPattern(start, range);
   var len = ranges.length, i = -1;
 
   var start = min;
@@ -204,26 +174,68 @@ function splitToPatterns(min, max) {
   return subpatterns;
 }
 
-function filterPatterns(arr, comparison, prefix) {
-  return arr.reduce(function (acc, ele) {
-    if (comparison.indexOf(ele) === -1) {
-      acc.push(prefix + ele);
+function filterPatterns(arr, comparison, prefix, intersection) {
+  var len = arr.length, i = -1;
+  var res = [], intersected = [];
+
+  while (++i < len) {
+    var ele = arr[i];
+    if (!intersection && comparison.indexOf(ele) === -1) {
+      res.push(prefix + ele);
     }
-    return acc;
-  }, []);
+
+    if (intersection && comparison.indexOf(ele) !== -1) {
+      intersected.push(prefix + ele);
+    }
+  }
+  return intersection ? intersected : res;
 }
 
-function addPatterns(arr, comparison, prefix) {
-  return arr.reduce(function (acc, ele) {
-    if (comparison.indexOf(ele) !== -1) {
-      acc.push(prefix + ele);
-    }
-    return acc;
-  }, []);
+function compare(a, b) {
+  return a - b;
+}
+
+function add(arr, ele) {
+  if (arr.indexOf(ele) === -1) {
+    arr.push(ele);
+  }
+  return arr;
+}
+
+function countNines(num, len) {
+  return String(num).slice(0, -len) + repeat('9', len);
+}
+
+function countZeros(integer, zeros) {
+  return integer - (integer % Math.pow(10, zeros));
+}
+
+function toBraces(str) {
+  return '{' + str + '}';
+}
+
+function rangify(a, b) {
+  return chars(a + '-' + b);
+}
+
+function chars(str) {
+  return '[' + str + ']';
+}
+
+function isSame(str) {
+  if (str.charAt(0) === '-') {
+    str = str.slice(1);
+  }
+  return /^(.)\1+$/.test(str);
+}
+
+function areSimilar(a, b) {
+  return isSame(a) && isSame(b)
+    && a.length === b.length;
 }
 
 /**
- * Expose `toRegex`
+ * Expose `toRegexRange`
  */
 
-module.exports = toRegex;
+module.exports = toRegexRange;
