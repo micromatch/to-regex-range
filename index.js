@@ -12,7 +12,7 @@ var isNumber = require('is-number');
 
 function toRegexRange(min, max) {
   if (isNumber(min) === false) {
-    throw new TypeError('toRegexRange: first argument is invalid.');
+    throw new RangeError('toRegexRange: first argument is invalid.');
   }
 
   if (typeof max === 'undefined') {
@@ -20,28 +20,22 @@ function toRegexRange(min, max) {
   }
 
   if (isNumber(max) === false) {
-    throw new TypeError('toRegexRange: second argument is invalid.');
+    throw new RangeError('toRegexRange: second argument is invalid.');
   }
 
-  if (min === max) {
-    return min;
+  var a = +min;
+  var b = +max;
+
+  if (a === b) {
+    return a;
+  }
+
+  if (a > b) {
+    return a + '|' + b;
   }
 
   min = min.toString();
   max = max.toString();
-  var aPad, bPad;
-
-  var zeros = 0;
-  if (min.length > 1 && (zeros = /^0+/.exec(min))) {
-    aPad = zeros[0].length;
-    min = min.slice(aPad);
-  }
-
-  if (max.length > 1 && (zeros = /^0+/.exec(max))) {
-    bPad = zeros[0].length;
-    max = max.slice(bPad);
-  }
-
   var positives = [];
   var negatives = [];
 
@@ -55,22 +49,17 @@ function toRegexRange(min, max) {
     negatives = splitToPatterns(newMin, newMax);
     min = 0;
   }
-
   if (max >= 0) {
     positives = splitToPatterns(min, max);
   }
+  return siftPatterns(negatives, positives);
+}
 
+function siftPatterns(negatives, positives) {
   var onlyNegative = filterPatterns(negatives, positives, '-');
   var onlyPositive = filterPatterns(positives, negatives, '');
   var intersected = filterPatterns(negatives, positives, '-?', true);
   var subpatterns = onlyNegative.concat(intersected || []).concat(onlyPositive || []);
-  var pad, res;
-
-  if (pad = ((aPad || bPad) ? (aPad > bPad ? aPad : bPad) : null)) {
-    var padding = repeat('0', pad);
-    res = subpatterns.join('|' + padding);
-    return padding + '(?:' + res + ')';
-  }
   return subpatterns.join('|');
 }
 
@@ -125,28 +114,17 @@ function rangeToPattern(start, stop) {
   }
 
   if (digits) {
-    pattern += '\\d';
+    pattern += '[0-9]';
   }
 
   if (digits > 1) {
     pattern += toBraces(digits);
   }
+
   return pattern;
 }
 
-
 function zip(a, b) {
-  // var alen = a.length;
-  // var blen = b.length;
-  // var diff;
-
-  // if ((diff = (alen - blen)) > 0) {
-  //   b = padLeft(b, diff, '0');
-
-  // } else if ((diff = (blen - alen)) > 0) {
-  //   a = padLeft(a, diff, '0');
-  // }
-
   var arrA = a.split('');
   var arrB = b.split('');
   var len = arrA.length;
@@ -183,7 +161,6 @@ function filterPatterns(arr, comparison, prefix, intersection) {
     if (!intersection && comparison.indexOf(ele) === -1) {
       res.push(prefix + ele);
     }
-
     if (intersection && comparison.indexOf(ele) !== -1) {
       intersected.push(prefix + ele);
     }
@@ -220,18 +197,6 @@ function rangify(a, b) {
 
 function chars(str) {
   return '[' + str + ']';
-}
-
-function isSame(str) {
-  if (str.charAt(0) === '-') {
-    str = str.slice(1);
-  }
-  return /^(.)\1+$/.test(str);
-}
-
-function areSimilar(a, b) {
-  return isSame(a) && isSame(b)
-    && a.length === b.length;
 }
 
 /**
