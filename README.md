@@ -14,6 +14,12 @@ Install with [npm](https://www.npmjs.com/)
 $ npm i to-regex-range --save
 ```
 
+Install with [bower](http://bower.io/)
+
+```sh
+$ bower install to-regex-range --save
+```
+
 ## Usage
 
 ```js
