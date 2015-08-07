@@ -9,6 +9,7 @@
 
 var repeat = require('repeat-string');
 var isNumber = require('is-number');
+var cache = {};
 
 function toRegexRange(min, max) {
   if (isNumber(min) === false) {
@@ -21,6 +22,11 @@ function toRegexRange(min, max) {
 
   if (isNumber(max) === false) {
     throw new RangeError('toRegexRange: second argument is invalid.');
+  }
+
+  var key = min + '-' + max;
+  if (cache.hasOwnProperty(key)) {
+    return cache[key];
   }
 
   var a = +min;
@@ -52,7 +58,9 @@ function toRegexRange(min, max) {
   if (max >= 0) {
     positives = splitToPatterns(min, max);
   }
-  return siftPatterns(negatives, positives);
+
+  var res = siftPatterns(negatives, positives);
+  return (cache[key] = res);
 }
 
 function siftPatterns(negatives, positives) {
@@ -191,12 +199,12 @@ function toBraces(str) {
   return '{' + str + '}';
 }
 
-function rangify(a, b) {
-  return chars(a + '-' + b);
+function toBrackets(str) {
+  return '[' + str + ']';
 }
 
-function chars(str) {
-  return '[' + str + ']';
+function rangify(a, b) {
+  return toBrackets(a + '-' + b);
 }
 
 /**
