@@ -1,6 +1,6 @@
 {
   "name": "to-regex-range",
-  "description": "Create a regex range from two numbers.",
+  "description": "Returns a regex-compatible range from two numbers, min and max. Useful for creating regular expressions to validate numbers, ranges, years, etc.",
   "version": "0.1.0",
   "homepage": "https://github.com/jonschlinkert/to-regex-range",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -20,7 +20,6 @@
     "test": "mocha"
   },
   "dependencies": {
-    "array-unique": "^0.2.1",
     "is-number": "^2.0.2",
     "repeat-string": "^1.5.2"
   },
@@ -28,5 +27,32 @@
     "mocha": "*",
     "should": "*"
   },
-  "keywords": []
+  "keywords": [
+    "alpha",
+    "alphabetical",
+    "bash",
+    "brace",
+    "expand",
+    "expansion",
+    "glob",
+    "match",
+    "matches",
+    "matching",
+    "number",
+    "numerical",
+    "range",
+    "ranges",
+    "sh"
+  ],
+  "verb": {
+    "related": {
+      "list": [
+        "fill-range",
+        "expand-range",
+        "micromatch",
+        "repeat-element",
+        "repeat-string"
+      ]
+    }
+  }
 }
