@@ -1,10 +1,11 @@
 'use strict';
 
-/* deps: mocha */
+require('mocha');
+require('should');
 var assert = require('assert');
-var should = require('should');
 var utils = require('./support');
 var toRange = require('..');
+var count = 0;
 
 function toRegex(min, max) {
   return new RegExp('^(' + toRange(min, max) + ')$');
@@ -12,7 +13,7 @@ function toRegex(min, max) {
 
 function match(min, max) {
   var regex = toRegex(min, max);
-  return function (num) {
+  return function(num) {
     return regex.test(num.toString());
   };
 }
@@ -24,6 +25,7 @@ function verifyRange(min, max, from, to) {
 
   while (++i < len) {
     var num = range[i];
+    count++;
 
     if (min <= num && num <= max) {
       assert.equal(isMatch(num), true);
@@ -33,45 +35,45 @@ function verifyRange(min, max, from, to) {
   }
 }
 
-describe('range', function () {
-  it('should throw an error when the first arg is invalid:', function () {
-    (function () {
+describe('range', function() {
+  it('should throw an error when the first arg is invalid:', function() {
+    (function() {
       toRange();
     }).should.throw('toRegexRange: first argument is invalid.');
   });
 
-  it('should throw an error when the second arg is invalid:', function () {
-    (function () {
+  it('should throw an error when the second arg is invalid:', function() {
+    (function() {
       toRange(1, {});
     }).should.throw('toRegexRange: second argument is invalid.');
   });
 });
 
-describe('minimum / maximum', function () {
-  it('should return `min|max` when the min is larger than the max:', function () {
+describe('minimum / maximum', function() {
+  it('should return `min|max` when the min is larger than the max:', function() {
     assert.equal(toRange(55, 10), '55|10');
   });
 });
 
-describe('ranges', function () {
-  it('should return the number when only one argument is passed:', function () {
+describe('ranges', function() {
+  it('should return the number when only one argument is passed:', function() {
     assert.equal(toRange(5), '5');
   });
 
-  it('should not return a range when both numbers are the same:', function () {
+  it('should not return a range when both numbers are the same:', function() {
     assert.equal(toRange(5, 5), '5');
   });
 
-  it('should support ranges than 10:', function () {
+  it('should support ranges than 10:', function() {
     assert.equal(toRange(1, 5), '[1-5]');
   });
 
-  it('should support strings:', function () {
+  it('should support strings:', function() {
     assert.equal(toRange('1', '5'), '[1-5]');
     assert.equal(toRange('10', '50'), '1[0-9]|[2-4][0-9]|50');
   });
 
-  it('should generate regular expressions from the given pattern', function () {
+  it('should generate regular expressions from the given pattern', function() {
     assert.equal(toRange(1, 1), '1');
     assert.equal(toRange(0, 1), '[0-1]');
     assert.equal(toRange(-1, -1), '-1');
@@ -91,7 +93,7 @@ describe('ranges', function () {
     assert.equal(toRange(1, 99), '[1-9]|[1-9][0-9]');
   });
 
-  it('should optimize regexes', function () {
+  it('should optimize regexes', function() {
     assert.equal(toRange(-9, 9), '-[1-9]|[0-9]');
     assert.equal(toRange(-19, 19), '-[1-9]|-?1[0-9]|[0-9]');
     assert.equal(toRange(-29, 29), '-[1-9]|-?[1-2][0-9]|[0-9]');
@@ -101,15 +103,13 @@ describe('ranges', function () {
   });
 });
 
-
-describe('validate ranges', function () {
-  after(function () {
-    console.log();
-    console.log('    Note that tests are slow b/c millions of');
-    console.log('    patterns are generated on-the-fly!');
+describe('validate ranges', function() {
+  after(function() {
+    var num = (+(+(count).toFixed(2))).toLocaleString();
+    console.log('   ', num, 'patterns tested');
   });
 
-  it('should support equal numbers:', function () {
+  it('should support equal numbers:', function() {
     verifyRange(1, 1, 0, 100);
     verifyRange(65443, 65443, 65000, 66000);
     verifyRange(192, 1000, 0, 1000);
@@ -145,11 +145,11 @@ describe('validate ranges', function () {
     verifyRange(4173, 7981, 0, 99999);
   });
 
-  it('should support one digit numbers:', function () {
+  it('should support one digit numbers:', function() {
     verifyRange(3, 7, 0, 99);
   });
 
-  it('should support one digit at bounds:', function () {
+  it('should support one digit at bounds:', function() {
     verifyRange(1, 9, 0, 1000);
   });
 
@@ -157,7 +157,7 @@ describe('validate ranges', function () {
     verifyRange(1000, 8632, 0, 99999);
   });
 
-  it('should work with numbers of varying lengths:', function () {
+  it('should work with numbers of varying lengths:', function() {
     verifyRange(1030, 20101, 0, 99999);
     verifyRange(13, 8632, 0, 10000);
   });
@@ -167,7 +167,7 @@ describe('validate ranges', function () {
     verifyRange(19, 21, 0, 100);
   });
 
-  it('should support big ranges:', function () {
+  it('should support big ranges:', function() {
     verifyRange(90, 98009, 0, 98999);
     verifyRange(999, 10000, 1, 20000);
   });
