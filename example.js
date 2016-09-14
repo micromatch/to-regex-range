@@ -12,8 +12,8 @@ console.log(toRegexRange('51', '29'));
 //=> '51|29'
 
 console.log(toRegexRange('1991', '2015'));
-
+console.log(toRegexRange('1', '10', '2'));
 var re = new RegExp(toRegexRange('1', '99'));
 console.log(re.test('50'));
-//=> true
+// => true
 
