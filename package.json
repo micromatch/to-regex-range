@@ -25,8 +25,7 @@
   },
   "devDependencies": {
     "gulp-format-md": "^0.1.9",
-    "mocha": "^2.4.5",
-    "should": "^8.3.1"
+    "mocha": "^2.4.5"
   },
   "keywords": [
     "alpha",
