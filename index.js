@@ -29,8 +29,13 @@ function toRegexRange(min, max) {
     return cache.range[key];
   }
 
-  var a = +min;
-  var b = +max;
+  var a = min;
+  var b = max;
+
+  if (min > 0 && max > 0) {
+    a = Math.min(min, max);
+    b = Math.max(min, max);
+  }
 
   if (a === b) {
     return a;
@@ -40,23 +45,23 @@ function toRegexRange(min, max) {
     return a + '|' + b;
   }
 
-  min = min.toString();
-  max = max.toString();
+  a = String(a);
+  b = String(b);
   var positives = [];
   var negatives = [];
 
-  if (min < 0) {
+  if (a < 0) {
     var newMin = 1;
-    if (max < 0) {
-      newMin = Math.abs(max);
+    if (b < 0) {
+      newMin = Math.abs(b);
     }
 
-    var newMax = Math.abs(min);
+    var newMax = Math.abs(a);
     negatives = splitToPatterns(newMin, newMax);
-    min = 0;
+    a = 0;
   }
-  if (max >= 0) {
-    positives = splitToPatterns(min, max);
+  if (b >= 0) {
+    positives = splitToPatterns(a, b);
   }
 
   var res = siftPatterns(negatives, positives);

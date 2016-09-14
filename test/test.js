@@ -1,7 +1,6 @@
 'use strict';
 
 require('mocha');
-require('should');
 var assert = require('assert');
 var utils = require('./support');
 var toRange = require('..');
@@ -14,7 +13,7 @@ function toRegex(min, max) {
 function match(min, max) {
   var regex = toRegex(min, max);
   return function(num) {
-    return regex.test(num.toString());
+    return regex.test(String(num));
   };
 }
 
@@ -25,33 +24,32 @@ function verifyRange(min, max, from, to) {
 
   while (++i < len) {
     var num = range[i];
-    count++;
-
     if (min <= num && num <= max) {
-      assert.equal(isMatch(num), true);
+      assert(isMatch(num));
     } else {
-      assert.equal(isMatch(num), false);
+      assert(!isMatch(num));
     }
+    count++;
   }
 }
 
 describe('range', function() {
   it('should throw an error when the first arg is invalid:', function() {
-    (function() {
+    assert.throws(function() {
       toRange();
-    }).should.throw('toRegexRange: first argument is invalid.');
+    }, /toRegexRange: first argument is invalid/);
   });
 
   it('should throw an error when the second arg is invalid:', function() {
-    (function() {
+    assert.throws(function() {
       toRange(1, {});
-    }).should.throw('toRegexRange: second argument is invalid.');
+    }, /toRegexRange: second argument is invalid/);
   });
 });
 
 describe('minimum / maximum', function() {
-  it('should return `min|max` when the min is larger than the max:', function() {
-    assert.equal(toRange(55, 10), '55|10');
+  it('should reverse `min/max` when the min is larger than the max:', function() {
+    assert.equal(toRange(55, 10), '1[0-9]|[2-4][0-9]|5[0-5]');
   });
 });
 
@@ -106,6 +104,7 @@ describe('ranges', function() {
 describe('validate ranges', function() {
   after(function() {
     var num = (+(+(count).toFixed(2))).toLocaleString();
+    console.log();
     console.log('   ', num, 'patterns tested');
   });
 
