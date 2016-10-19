@@ -24,49 +24,33 @@ function toRegexRange(min, max) {
     throw new RangeError('toRegexRange: second argument is invalid.');
   }
 
+  var a = Math.min(min, max);
+  var b = Math.max(min, max);
+
+  if (a === b) return String(a);
+
   var key = min + ':' + max;
   if (cache.range.hasOwnProperty(key)) {
     return cache.range[key];
   }
 
-  var a = min;
-  var b = max;
-
-  if (min > 0 && max > 0) {
-    a = Math.min(min, max);
-    b = Math.max(min, max);
-  }
-
-  if (a === b) {
-    return a;
-  }
-
-  if (a > b) {
-    return a + '|' + b;
-  }
-
-  a = String(a);
-  b = String(b);
   var positives = [];
   var negatives = [];
 
   if (a < 0) {
-    var newMin = 1;
-    if (b < 0) {
-      newMin = Math.abs(b);
-    }
-
+    var newMin = b < 0 ? Math.abs(b) : 1;
     var newMax = Math.abs(a);
     negatives = splitToPatterns(newMin, newMax);
     a = 0;
   }
+
   if (b >= 0) {
     positives = splitToPatterns(a, b);
   }
 
-  var res = siftPatterns(negatives, positives);
-  cache.range[key] = res;
-  return res;
+  var str = siftPatterns(negatives, positives);
+  cache.range[key] = str;
+  return str;
 }
 
 function siftPatterns(negatives, positives) {
@@ -78,15 +62,15 @@ function siftPatterns(negatives, positives) {
 }
 
 function splitToRanges(min, max) {
-  min = +min;
-  max = +max;
+  min = Number(min);
+  max = Number(max);
 
   var nines = 1;
   var stops = [max];
   var stop = +countNines(min, nines);
 
   while (min <= stop && stop <= max) {
-    stops = add(stops, stop);
+    stops = push(stops, stop);
     nines += 1;
     stop = +countNines(min, nines);
   }
@@ -95,7 +79,7 @@ function splitToRanges(min, max) {
   stop = countZeros(max + 1, zeros) - 1;
 
   while (min < stop && stop <= max) {
-    stops = add(stops, stop);
+    stops = push(stops, stop);
     zeros += 1;
     stop = countZeros(max + 1, zeros) - 1;
   }
@@ -104,9 +88,19 @@ function splitToRanges(min, max) {
   return stops;
 }
 
-function rangeToPattern(start, stop) {
-  var key = start + ':' + stop;
+/**
+ * Convert a range to a regex pattern
+ * @param {Number} `start`
+ * @param {Number} `stop`
+ * @return {String}
+ */
 
+function rangeToPattern(start, stop) {
+  if (start === stop) {
+    return {pattern: String(start), digits: []};
+  }
+
+  var key = start + ':' + stop;
   if (cache.rangeToPattern.hasOwnProperty(key)) {
     return cache.rangeToPattern[key];
   }
@@ -118,15 +112,15 @@ function rangeToPattern(start, stop) {
   var digits = 0;
 
   while (++i < len) {
-    var current = zipped[i];
-    var startDigit = current[0];
-    var stopDigit = current[1];
+    var range = zipped[i];
+    var startDigit = range[0];
+    var stopDigit = range[1];
 
     if (startDigit === stopDigit) {
       pattern += startDigit;
 
     } else if (startDigit !== '0' || stopDigit !== '9') {
-      pattern += toCharacterClass(startDigit, stopDigit);
+      pattern += toRange(startDigit, stopDigit);
 
     } else {
       digits += 1;
@@ -137,12 +131,9 @@ function rangeToPattern(start, stop) {
     pattern += '[0-9]';
   }
 
-  if (digits > 1) {
-    pattern += limit(digits);
-  }
-
-  cache.rangeToPattern[key] = pattern;
-  return pattern;
+  var tok = { pattern: pattern, digits: [digits] };
+  // cache.rangeToPattern[key] = tok;
+  return tok;
 }
 
 /**
@@ -161,14 +152,30 @@ function splitToPatterns(min, max) {
   var idx = -1;
 
   var start = min;
-  var subpatterns = new Array(len);
+  var tokens = [];
+  var prev;
 
   while (++idx < len) {
     var range = ranges[idx];
-    subpatterns[idx] = rangeToPattern(start, range);
+    var tok = rangeToPattern(start, range);
+
+    if (prev && prev.pattern === tok.pattern) {
+      if (prev.digits.length > 1) {
+        prev.digits.pop();
+      }
+      prev.digits.push(tok.digits[0]);
+      prev.string = prev.pattern + toQuantifier(prev.digits);
+      start = range + 1;
+      continue;
+    }
+
+    tok.string = tok.pattern + toQuantifier(tok.digits);
+    tokens.push(tok);
     start = range + 1;
+    prev = tok;
   }
-  return subpatterns;
+
+  return tokens;
 }
 
 function filterPatterns(arr, comparison, prefix, intersection) {
@@ -176,8 +183,14 @@ function filterPatterns(arr, comparison, prefix, intersection) {
   var intersected = [];
   var res = [];
 
+  comparison = comparison.map(function(tok) {
+    return tok.string;
+  });
+
   while (++i < len) {
-    var ele = arr[i];
+    var tok = arr[i];
+    var ele = tok.string;
+
     if (!intersection && comparison.indexOf(ele) === -1) {
       res.push(prefix + ele);
     }
@@ -196,11 +209,16 @@ function countZeros(integer, zeros) {
   return integer - (integer % Math.pow(10, zeros));
 }
 
-function limit(str) {
-  return '{' + str + '}';
+function toQuantifier(digits) {
+  var start = digits[0];
+  var stop = digits[1] ? (',' + digits[1]) : '';
+  if (!stop && (!start || start === 1)) {
+    return '';
+  }
+  return '{' + start + stop + '}';
 }
 
-function toCharacterClass(a, b) {
+function toRange(a, b) {
   return '[' + a + '-' + b + ']';
 }
 
@@ -208,10 +226,8 @@ function compare(a, b) {
   return a - b;
 }
 
-function add(arr, ele) {
-  if (arr.indexOf(ele) === -1) {
-    arr.push(ele);
-  }
+function push(arr, ele) {
+  if (arr.indexOf(ele) === -1) arr.push(ele);
   return arr;
 }
 
