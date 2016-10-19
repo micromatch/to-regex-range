@@ -1,7 +1,7 @@
 {
   "name": "to-regex-range",
   "description": "Returns a regex-compatible range from two numbers, min and max. Validated against more than 1.1 million generated unit tests that run in less than 400ms! Useful for creating regular expressions to validate numbers, ranges, years, etc.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/jonschlinkert/to-regex-range",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/to-regex-range",
