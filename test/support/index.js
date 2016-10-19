@@ -2,12 +2,15 @@
 var utils = module.exports;
 
 // TODO: publish as lib
-utils.toRange = function toRange(start, stop, step) {
-  step = step || 1;
-  var arr = new Array((stop - start) / step);
+utils.expandRange = function(min, max, step) {
+  step = step ? Math.abs(step) : 1;
+  min = +min;
+  max = +max;
+
+  var arr = new Array(Math.floor((max - min) / step));
   var num = 0;
 
-  for (var i = start; i <= stop; i += step) {
+  for (var i = min; i <= max; i += step) {
     arr[num++] = i;
   }
   return arr;
