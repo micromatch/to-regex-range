@@ -131,9 +131,7 @@ function rangeToPattern(start, stop) {
     pattern += '[0-9]';
   }
 
-  var tok = { pattern: pattern, digits: [digits] };
-  // cache.rangeToPattern[key] = tok;
-  return tok;
+  return { pattern: pattern, digits: [digits] };
 }
 
 /**
@@ -223,7 +221,7 @@ function toRange(a, b) {
 }
 
 function compare(a, b) {
-  return a - b;
+  return a > b ? 1 : b > a ? -1 : 0;
 }
 
 function push(arr, ele) {
