@@ -1,6 +1,6 @@
 {
   "name": "to-regex-range",
-  "description": "Returns a regex-compatible range from two numbers, min and max. Useful for creating regular expressions to validate numbers, ranges, years, etc.",
+  "description": "Returns a regex-compatible range from two numbers, min and max. Validated against more than 1.5 million test assertions in 500ms! Useful for creating regular expressions to validate numbers, ranges, years, etc.",
   "repository": "jonschlinkert/to-regex-range",
   "license": "MIT",
   "homepage": "https://github.com/jonschlinkert/to-regex-range",
@@ -11,18 +11,22 @@
     "index.js"
   ],
   "dependencies": {
-    "is-number": "^2.0.2",
-    "repeat-string": "^1.5.2"
+    "is-number": "^3.0.0",
+    "repeat-string": "^1.6.1"
   },
   "devDependencies": {
-    "mocha": "*",
-    "should": "*"
+    "fill-range": "^3.1.1",
+    "gulp-format-md": "^0.1.12",
+    "mocha": "^3.2.0",
+    "text-table": "^0.2.0",
+    "time-diff": "^0.3.1"
   },
   "keywords": [
     "alpha",
     "alphabetical",
     "bash",
     "brace",
+    "date",
     "expand",
     "expansion",
     "glob",
@@ -33,6 +37,27 @@
     "numerical",
     "range",
     "ranges",
-    "sh"
+    "regex",
+    "sequence",
+    "sh",
+    "to",
+    "year"
+  ],
+  "version": "2.0.0",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/to-regex-range/issues"
+  },
+  "files": [
+    "index.js"
+  ],
+  "ignore": [
+    "actual",
+    "bower_components",
+    "fixtures",
+    "node_modules",
+    "temp",
+    "test",
+    "test.js",
+    "tmp"
   ]
 }
