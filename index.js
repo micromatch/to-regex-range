@@ -1,63 +1,84 @@
 /*!
  * to-regex-range <https://github.com/jonschlinkert/to-regex-range>
  *
- * Copyright (c) 2015, Jon Schlinkert.
- * Licensed under the MIT License.
+ * Copyright (c) 2015, 2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
 'use strict';
 
 var repeat = require('repeat-string');
 var isNumber = require('is-number');
-var cache = {range: {}, rangeToPattern: {}};
+var cache = {};
 
-function toRegexRange(min, max) {
+function toRegexRange(min, max, options) {
   if (isNumber(min) === false) {
     throw new RangeError('toRegexRange: first argument is invalid.');
   }
 
-  if (typeof max === 'undefined') {
-    return '' + min;
+  if (typeof max === 'undefined' || min === max) {
+    return String(min);
   }
 
   if (isNumber(max) === false) {
     throw new RangeError('toRegexRange: second argument is invalid.');
   }
 
+  options = options || {};
+  var key = min + ':' + max + '=' + options.capture;
+  if (cache.hasOwnProperty(key)) {
+    return cache[key].result;
+  }
+
   var a = Math.min(min, max);
   var b = Math.max(min, max);
 
-  if (a === b) return String(a);
-
-  var key = min + ':' + max;
-  if (cache.range.hasOwnProperty(key)) {
-    return cache.range[key];
+  if (Math.abs(a - b) === 1) {
+    var result = min + '|' + max;
+    if (options.capture) {
+      return '(' + result + ')';
+    }
+    return result;
   }
 
+  var isPadded = padding(min) || padding(max);
   var positives = [];
   var negatives = [];
+
+  var tok = {min: min, max: max, a: a, b: b};
+  if (isPadded) {
+    tok.isPadded = isPadded;
+    tok.maxLen = String(tok.max).length;
+  }
 
   if (a < 0) {
     var newMin = b < 0 ? Math.abs(b) : 1;
     var newMax = Math.abs(a);
-    negatives = splitToPatterns(newMin, newMax);
-    a = 0;
+    negatives = splitToPatterns(newMin, newMax, tok);
+    a = tok.a = 0;
   }
 
   if (b >= 0) {
-    positives = splitToPatterns(a, b);
+    positives = splitToPatterns(a, b, tok);
   }
 
-  var str = siftPatterns(negatives, positives);
-  cache.range[key] = str;
-  return str;
+  tok.negatives = negatives;
+  tok.positives = positives;
+  tok.result = siftPatterns(negatives, positives);
+
+  if (options.capture && (positives.length + negatives.length) > 1) {
+    tok.result = '(' + tok.result + ')';
+  }
+
+  cache[key] = tok;
+  return tok.result;
 }
 
 function siftPatterns(negatives, positives) {
-  var onlyNegative = filterPatterns(negatives, positives, '-');
-  var onlyPositive = filterPatterns(positives, negatives, '');
-  var intersected = filterPatterns(negatives, positives, '-?', true);
-  var subpatterns = onlyNegative.concat(intersected || []).concat(onlyPositive || []);
+  var onlyNegative = filterPatterns(negatives, positives, '-') || [];
+  var onlyPositive = filterPatterns(positives, negatives, '') || [];
+  var intersected = filterPatterns(negatives, positives, '-?', true) || [];
+  var subpatterns = onlyNegative.concat(intersected).concat(onlyPositive);
   return subpatterns.join('|');
 }
 
@@ -100,11 +121,6 @@ function rangeToPattern(start, stop) {
     return {pattern: String(start), digits: []};
   }
 
-  var key = start + ':' + stop;
-  if (cache.rangeToPattern.hasOwnProperty(key)) {
-    return cache.rangeToPattern[key];
-  }
-
   var zipped = zip(String(start), String(stop));
   var len = zipped.length, i = -1;
 
@@ -112,15 +128,15 @@ function rangeToPattern(start, stop) {
   var digits = 0;
 
   while (++i < len) {
-    var range = zipped[i];
-    var startDigit = range[0];
-    var stopDigit = range[1];
+    var numbers = zipped[i];
+    var startDigit = numbers[0];
+    var stopDigit = numbers[1];
 
     if (startDigit === stopDigit) {
       pattern += startDigit;
 
     } else if (startDigit !== '0' || stopDigit !== '9') {
-      pattern += toRange(startDigit, stopDigit);
+      pattern += toCharacterClass(startDigit, stopDigit);
 
     } else {
       digits += 1;
@@ -134,6 +150,65 @@ function rangeToPattern(start, stop) {
   return { pattern: pattern, digits: [digits] };
 }
 
+function splitToPatterns(min, max, tok) {
+  var ranges = splitToRanges(min, max);
+  var len = ranges.length;
+  var idx = -1;
+
+  var tokens = [];
+  var start = min;
+  var prev;
+
+  while (++idx < len) {
+    var range = ranges[idx];
+    var obj = rangeToPattern(start, range);
+    var zeros = '';
+
+    if (!tok.isPadded && prev && prev.pattern === obj.pattern) {
+      if (prev.digits.length > 1) {
+        prev.digits.pop();
+      }
+      prev.digits.push(obj.digits[0]);
+      prev.string = prev.pattern + toQuantifier(prev.digits);
+      start = range + 1;
+      continue;
+    }
+
+    if (tok.isPadded) {
+      zeros = padZeros(range, tok);
+    }
+
+    obj.string = zeros + obj.pattern + toQuantifier(obj.digits);
+    tokens.push(obj);
+    start = range + 1;
+    prev = obj;
+  }
+
+  return tokens;
+}
+
+function filterPatterns(arr, comparison, prefix, intersection) {
+  var res = [];
+
+  for (var i = 0; i < arr.length; i++) {
+    var tok = arr[i];
+    var ele = tok.string;
+
+    if (prefix === '-' && ele.charAt(0) === '0') {
+      ele = '0*' + ele.slice(ele.charAt(1) === '{' ? 4 : 1);
+    }
+
+    if (!intersection && !contains(comparison, 'string', ele)) {
+      res.push(prefix + ele);
+    }
+
+    if (intersection && contains(comparison, 'string', ele)) {
+      res.push(prefix + ele);
+    }
+  }
+  return res;
+}
+
 /**
  * Zip strings (`for in` can be used on string characters)
  */
@@ -144,63 +219,26 @@ function zip(a, b) {
   return arr;
 }
 
-function splitToPatterns(min, max) {
-  var ranges = splitToRanges(min, max);
-  var len = ranges.length;
-  var idx = -1;
-
-  var start = min;
-  var tokens = [];
-  var prev;
-
-  while (++idx < len) {
-    var range = ranges[idx];
-    var tok = rangeToPattern(start, range);
-
-    if (prev && prev.pattern === tok.pattern) {
-      if (prev.digits.length > 1) {
-        prev.digits.pop();
-      }
-      prev.digits.push(tok.digits[0]);
-      prev.string = prev.pattern + toQuantifier(prev.digits);
-      start = range + 1;
-      continue;
-    }
-
-    tok.string = tok.pattern + toQuantifier(tok.digits);
-    tokens.push(tok);
-    start = range + 1;
-    prev = tok;
-  }
-
-  return tokens;
+function compare(a, b) {
+  return a > b ? 1 : b > a ? -1 : 0;
 }
 
-function filterPatterns(arr, comparison, prefix, intersection) {
-  var len = arr.length, i = -1;
-  var intersected = [];
-  var res = [];
-
-  comparison = comparison.map(function(tok) {
-    return tok.string;
-  });
-
-  while (++i < len) {
-    var tok = arr[i];
-    var ele = tok.string;
-
-    if (!intersection && comparison.indexOf(ele) === -1) {
-      res.push(prefix + ele);
-    }
-    if (intersection && comparison.indexOf(ele) !== -1) {
-      intersected.push(prefix + ele);
-    }
-  }
-  return intersection ? intersected : res;
+function push(arr, ele) {
+  if (arr.indexOf(ele) === -1) arr.push(ele);
+  return arr;
 }
 
-function countNines(num, len) {
-  return String(num).slice(0, -len) + repeat('9', len);
+function contains(arr, key, val) {
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i][key] === val) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function countNines(min, len) {
+  return String(min).slice(0, -len) + repeat('9', len);
 }
 
 function countZeros(integer, zeros) {
@@ -216,17 +254,28 @@ function toQuantifier(digits) {
   return '{' + start + stop + '}';
 }
 
-function toRange(a, b) {
+function toCharacterClass(a, b) {
   return '[' + a + '-' + b + ']';
 }
 
-function compare(a, b) {
-  return a > b ? 1 : b > a ? -1 : 0;
+function padding(str) {
+  return /^-?(0+)\d/.exec(str);
 }
 
-function push(arr, ele) {
-  if (arr.indexOf(ele) === -1) arr.push(ele);
-  return arr;
+function padZeros(val, tok) {
+  if (tok.isPadded) {
+    var diff = Math.abs(tok.maxLen - String(val).length);
+    switch (diff) {
+      case 0:
+        return '';
+      case 1:
+        return '0';
+      default: {
+        return '0{' + diff + '}';
+      }
+    }
+  }
+  return val;
 }
 
 /**

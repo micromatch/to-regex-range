@@ -1,6 +1,6 @@
 {
   "name": "to-regex-range",
-  "description": "Returns a regex-compatible range from two numbers, min and max. Validated against more than 1.1 million generated unit tests that run in less than 400ms! Useful for creating regular expressions to validate numbers, ranges, years, etc.",
+  "description": "Pass two numbers, get a regex-compatible source string for matching ranges. Validated against more than 2.87 million test assertions.",
   "version": "1.0.2",
   "homepage": "https://github.com/jonschlinkert/to-regex-range",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -21,11 +21,14 @@
   },
   "dependencies": {
     "is-number": "^3.0.0",
-    "repeat-string": "^1.5.4"
+    "repeat-string": "^1.6.1"
   },
   "devDependencies": {
-    "gulp-format-md": "^0.1.11",
-    "mocha": "^3.1.2"
+    "fill-range": "^3.1.1",
+    "gulp-format-md": "^0.1.12",
+    "mocha": "^3.2.0",
+    "text-table": "^0.2.0",
+    "time-diff": "^0.3.1"
   },
   "keywords": [
     "alpha",
@@ -70,8 +73,24 @@
     "lint": {
       "reflinks": true
     },
+    "helpers": [
+      "./examples.js"
+    ],
     "reflinks": [
-      "verb"
+      "0-5",
+      "0-9",
+      "1-5",
+      "1-9",
+      "expand-range",
+      "fill-range",
+      "micromatch",
+      "npm",
+      "range-regex",
+      "repeat-element",
+      "repeat-string",
+      "verb",
+      "verb-generate-readme",
+      "yarn"
     ]
   }
 }
