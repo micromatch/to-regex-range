@@ -25,9 +25,10 @@ function toRegexRange(min, max, options) {
   }
 
   options = options || {};
-  var shorthand = options.shorthand || '';
-  var capture = options.capture || '';
-  var key = min + ':' + max + '=' + shorthand + capture;
+  var relax = String(options.relaxZeros);
+  var shorthand = String(options.shorthand);
+  var capture = String(options.capture);
+  var key = min + ':' + max + '=' + relax + shorthand + capture;
   if (cache.hasOwnProperty(key)) {
     return cache[key].result;
   }
@@ -66,7 +67,7 @@ function toRegexRange(min, max, options) {
 
   tok.negatives = negatives;
   tok.positives = positives;
-  tok.result = siftPatterns(negatives, positives);
+  tok.result = siftPatterns(negatives, positives, options);
 
   if (options.capture && (positives.length + negatives.length) > 1) {
     tok.result = '(' + tok.result + ')';
@@ -76,10 +77,10 @@ function toRegexRange(min, max, options) {
   return tok.result;
 }
 
-function siftPatterns(negatives, positives) {
-  var onlyNegative = filterPatterns(negatives, positives, '-') || [];
-  var onlyPositive = filterPatterns(positives, negatives, '') || [];
-  var intersected = filterPatterns(negatives, positives, '-?', true) || [];
+function siftPatterns(neg, pos, options) {
+  var onlyNegative = filterPatterns(neg, pos, '-', false, options) || [];
+  var onlyPositive = filterPatterns(pos, neg, '', false, options) || [];
+  var intersected = filterPatterns(neg, pos, '-?', true, options) || [];
   var subpatterns = onlyNegative.concat(intersected).concat(onlyPositive);
   return subpatterns.join('|');
 }
@@ -189,15 +190,21 @@ function splitToPatterns(min, max, tok, options) {
   return tokens;
 }
 
-function filterPatterns(arr, comparison, prefix, intersection) {
+function filterPatterns(arr, comparison, prefix, intersection, options) {
   var res = [];
 
   for (var i = 0; i < arr.length; i++) {
     var tok = arr[i];
     var ele = tok.string;
 
-    if (prefix === '-' && ele.charAt(0) === '0') {
-      ele = '0*' + ele.slice(ele.charAt(1) === '{' ? 4 : 1);
+    if (options.relaxZeros !== false) {
+      if (prefix === '-' && ele.charAt(0) === '0') {
+        if (ele.charAt(1) === '{') {
+          ele = '0*' + ele.replace(/^0\{\d+\}/, '');
+        } else {
+          ele = '0*' + ele.slice(1);
+        }
+      }
     }
 
     if (!intersection && !contains(comparison, 'string', ele)) {
