@@ -100,26 +100,95 @@ console.log(re.test('94')); //=> true
 console.log(re.test('96')); //=> false
 ```
 
+## Options
+
+### options.capture
+
+**Type**: `boolean`
+
+**Deafault**: `undefined`
+
+Wrap the returned value in parentheses when there is more than one regex condition. Useful when you're dynamically generating ranges.
+
+```js
+console.log(toRegexRange('-10', '10'));
+//=> -[1-9]|-?10|[0-9]
+
+console.log(toRegexRange('-10', '10', {capture: true}));
+//=> (-[1-9]|-?10|[0-9])
+```
+
+### options.shorthand
+
+**Type**: `boolean`
+
+**Deafault**: `undefined`
+
+Use the regex shorthand for `[0-9]`:
+
+```js
+console.log(toRegexRange('0', '999999'));
+//=> [0-9]|[1-9][0-9]{1,5}
+
+console.log(toRegexRange('0', '999999', {shorthand: true}));
+//=> \d|[1-9]\d{1,5}
+```
+
+### options.relaxZeros
+
+**Type**: `boolean`
+
+**Deafault**: `true`
+
+This option only applies to **negative zero-padded ranges**. By default, when a negative zero-padded range is defined, the number of leading zeros is relaxed using `-0*`.
+
+```js
+console.log(toRegexRange('-001', '100'));
+//=> -0*1|0{2}[0-9]|0[1-9][0-9]|100
+
+console.log(toRegexRange('-001', '100', {relaxZeros: false}));
+//=> -0{2}1|0{2}[0-9]|0[1-9][0-9]|100
+```
+
+<details>
+<summary><strong>Why are zeros relaxed for negative zero-padded ranges by default?</strong></summary>
+
+Consider the following.
+
+```js
+var regex = toRegexRange('-001', '100');
+```
+
+_Note that `-001` and `100` are both three digits long_.
+
+In most zero-padding implementations, only a single leading zero is enough to indicate that zero-padding should be applied. Thus, the leading zeros would be "corrected" on the negative range in the example to `-01`, instead of `-001`, to make total length of each string no greater than the length of the largest number in the range.
+
+If zeros were not relaxed by default, you might expect the resulting regex of the above pattern to match `-001` - given that it's defined that way in the arguments - _but it wouldn't_. It would, however, match `-01`. This gets even more ambiguous with large ranges, like `-01` to `1000000`.
+
+Thus, we relax zeros by default to provide a more predictable experience for users.
+
+</details>
+
 ## Examples
 
 | **Range**                     | **Result**                                                  | **Compile time** |
 | ---                           | ---                                                         | ---              |
-| `toRegexRange('5, 5')`        | `5`                                                         | _26μs_           |
-| `toRegexRange('5, 6')`        | `5\|6`                                                      | _47μs_           |
-| `toRegexRange('29, 51')`      | `29\|[3-4][0-9]\|5[0-1]`                                    | _452μs_          |
-| `toRegexRange('31, 877')`     | `3[1-9]\|[4-9][0-9]\|[1-7][0-9]{2}\|8[0-6][0-9]\|87[0-7]`   | _756μs_          |
-| `toRegexRange('111, 555')`    | `11[1-9]\|1[2-9][0-9]\|[2-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]` | _61μs_           |
-| `toRegexRange('-10, 10')`     | `-[1-9]\|-?10\|[0-9]`                                       | _69μs_           |
+| `toRegexRange('5, 5')`        | `5`                                                         | _25μs_           |
+| `toRegexRange('5, 6')`        | `5\|6`                                                      | _41μs_           |
+| `toRegexRange('29, 51')`      | `29\|[34][0-9]\|5[01]`                                      | _444μs_          |
+| `toRegexRange('31, 877')`     | `3[1-9]\|[4-9][0-9]\|[1-7][0-9]{2}\|8[0-6][0-9]\|87[0-7]`   | _833μs_          |
+| `toRegexRange('111, 555')`    | `11[1-9]\|1[2-9][0-9]\|[2-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]` | _56μs_           |
+| `toRegexRange('-10, 10')`     | `-[1-9]\|-?10\|[0-9]`                                       | _63μs_           |
 | `toRegexRange('-100, -10')`   | `-1[0-9]\|-[2-9][0-9]\|-100`                                | _42μs_           |
-| `toRegexRange('-100, 100')`   | `-[1-9]\|-?[1-9][0-9]\|-?100\|[0-9]`                        | _42μs_           |
-| `toRegexRange('001, 100')`    | `0{2}[1-9]\|0[1-9][0-9]\|100`                               | _135μs_          |
-| `toRegexRange('0010, 1000')`  | `0{2}1[0-9]\|0{2}[2-9][0-9]\|0[1-9][0-9]{2}\|1000`          | _53μs_           |
-| `toRegexRange('1, 2')`        | `1\|2`                                                      | _18μs_           |
+| `toRegexRange('-100, 100')`   | `-[1-9]\|-?[1-9][0-9]\|-?100\|[0-9]`                        | _41μs_           |
+| `toRegexRange('001, 100')`    | `0{2}[1-9]\|0[1-9][0-9]\|100`                               | _134μs_          |
+| `toRegexRange('0010, 1000')`  | `0{2}1[0-9]\|0{2}[2-9][0-9]\|0[1-9][0-9]{2}\|1000`          | _58μs_           |
+| `toRegexRange('1, 2')`        | `1\|2`                                                      | _10μs_           |
 | `toRegexRange('1, 5')`        | `[1-5]`                                                     | _23μs_           |
-| `toRegexRange('1, 10')`       | `[1-9]\|10`                                                 | _22μs_           |
+| `toRegexRange('1, 10')`       | `[1-9]\|10`                                                 | _21μs_           |
 | `toRegexRange('1, 100')`      | `[1-9]\|[1-9][0-9]\|100`                                    | _23μs_           |
-| `toRegexRange('1, 1000')`     | `[1-9]\|[1-9][0-9]{1,2}\|1000`                              | _60μs_           |
-| `toRegexRange('1, 10000')`    | `[1-9]\|[1-9][0-9]{1,3}\|10000`                             | _117μs_          |
+| `toRegexRange('1, 1000')`     | `[1-9]\|[1-9][0-9]{1,2}\|1000`                              | _50μs_           |
+| `toRegexRange('1, 10000')`    | `[1-9]\|[1-9][0-9]{1,3}\|10000`                             | _132μs_          |
 | `toRegexRange('1, 100000')`   | `[1-9]\|[1-9][0-9]{1,4}\|100000`                            | _42μs_           |
 | `toRegexRange('1, 1000000')`  | `[1-9]\|[1-9][0-9]{1,5}\|1000000`                           | _46μs_           |
 | `toRegexRange('1, 10000000')` | `[1-9]\|[1-9][0-9]{1,6}\|10000000`                          | _60μs_           |

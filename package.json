@@ -75,22 +75,6 @@
     },
     "helpers": [
       "./examples.js"
-    ],
-    "reflinks": [
-      "0-5",
-      "0-9",
-      "1-5",
-      "1-9",
-      "expand-range",
-      "fill-range",
-      "micromatch",
-      "npm",
-      "range-regex",
-      "repeat-element",
-      "repeat-string",
-      "verb",
-      "verb-generate-readme",
-      "yarn"
     ]
   }
 }
