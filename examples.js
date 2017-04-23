@@ -72,4 +72,3 @@ exports.rangeExamples = function() {
     return line.replace(/^ +/, '');
   }).join('\n');
 };
-

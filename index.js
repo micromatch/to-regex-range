@@ -25,7 +25,9 @@ function toRegexRange(min, max, options) {
   }
 
   options = options || {};
-  var key = min + ':' + max + '=' + options.capture;
+  var shorthand = options.shorthand || '';
+  var capture = options.capture || '';
+  var key = min + ':' + max + '=' + shorthand + capture;
   if (cache.hasOwnProperty(key)) {
     return cache[key].result;
   }
@@ -54,12 +56,12 @@ function toRegexRange(min, max, options) {
   if (a < 0) {
     var newMin = b < 0 ? Math.abs(b) : 1;
     var newMax = Math.abs(a);
-    negatives = splitToPatterns(newMin, newMax, tok);
+    negatives = splitToPatterns(newMin, newMax, tok, options);
     a = tok.a = 0;
   }
 
   if (b >= 0) {
-    positives = splitToPatterns(a, b, tok);
+    positives = splitToPatterns(a, b, tok, options);
   }
 
   tok.negatives = negatives;
@@ -116,7 +118,7 @@ function splitToRanges(min, max) {
  * @return {String}
  */
 
-function rangeToPattern(start, stop) {
+function rangeToPattern(start, stop, options) {
   if (start === stop) {
     return {pattern: String(start), digits: []};
   }
@@ -144,13 +146,13 @@ function rangeToPattern(start, stop) {
   }
 
   if (digits) {
-    pattern += '[0-9]';
+    pattern += options.shorthand ? '\\d' : '[0-9]';
   }
 
   return { pattern: pattern, digits: [digits] };
 }
 
-function splitToPatterns(min, max, tok) {
+function splitToPatterns(min, max, tok, options) {
   var ranges = splitToRanges(min, max);
   var len = ranges.length;
   var idx = -1;
@@ -161,7 +163,7 @@ function splitToPatterns(min, max, tok) {
 
   while (++idx < len) {
     var range = ranges[idx];
-    var obj = rangeToPattern(start, range);
+    var obj = rangeToPattern(start, range, options);
     var zeros = '';
 
     if (!tok.isPadded && prev && prev.pattern === obj.pattern) {
