@@ -264,7 +264,7 @@ function toQuantifier(digits) {
 }
 
 function toCharacterClass(a, b) {
-  return '[' + a + '-' + b + ']';
+  return '[' + a + ((b - a === 1) ? '' : '-') + b + ']';
 }
 
 function padding(str) {
