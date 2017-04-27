@@ -1,12 +1,12 @@
 {
   "name": "to-regex-range",
-  "description": "Pass two numbers, get a regex-compatible source string for matching ranges. Validated against more than 2.87 million test assertions.",
+  "description": "Pass two numbers, get a regex-compatible source string for matching ranges. Validated against more than 2.78 million test assertions.",
   "version": "2.1.0",
-  "homepage": "https://github.com/jonschlinkert/to-regex-range",
+  "homepage": "https://github.com/micromatch/to-regex-range",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
-  "repository": "jonschlinkert/to-regex-range",
+  "repository": "micromatch/to-regex-range",
   "bugs": {
-    "url": "https://github.com/jonschlinkert/to-regex-range/issues"
+    "url": "https://github.com/micromatch/to-regex-range/issues"
   },
   "license": "MIT",
   "files": [
@@ -75,6 +75,12 @@
     },
     "helpers": [
       "./examples.js"
+    ],
+    "reflinks": [
+      "0-5",
+      "0-9",
+      "1-5",
+      "1-9"
     ]
   }
 }
