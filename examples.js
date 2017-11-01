@@ -67,7 +67,7 @@ console.log(text);
  * by verb and used in the .verb.md readme template
  */
 
-exports.rangeExamples = function() {
+module.exports = function() {
   return text.split('\n').map(function(line) {
     return line.replace(/^ +/, '');
   }).join('\n');
