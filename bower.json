@@ -1,9 +1,9 @@
 {
   "name": "to-regex-range",
-  "description": "Returns a regex-compatible range from two numbers, min and max. Validated against more than 1.5 million test assertions in 500ms! Useful for creating regular expressions to validate numbers, ranges, years, etc.",
-  "repository": "jonschlinkert/to-regex-range",
+  "description": "Pass two numbers, get a regex-compatible source string for matching ranges. Validated against more than 2.78 million test assertions.",
+  "repository": "micromatch/to-regex-range",
   "license": "MIT",
-  "homepage": "https://github.com/jonschlinkert/to-regex-range",
+  "homepage": "https://github.com/micromatch/to-regex-range",
   "authors": [
     "Jon Schlinkert (https://github.com/jonschlinkert)"
   ],
@@ -11,11 +11,11 @@
     "index.js"
   ],
   "dependencies": {
-    "is-number": "^3.0.0",
+    "is-number": "^4.0.0",
     "repeat-string": "^1.6.1"
   },
   "devDependencies": {
-    "fill-range": "^3.1.1",
+    "fill-range": "^4.0.0",
     "gulp-format-md": "^0.1.12",
     "mocha": "^3.2.0",
     "text-table": "^0.2.0",
@@ -43,9 +43,9 @@
     "to",
     "year"
   ],
-  "version": "2.0.0",
+  "version": "2.1.1",
   "bugs": {
-    "url": "https://github.com/jonschlinkert/to-regex-range/issues"
+    "url": "https://github.com/micromatch/to-regex-range/issues"
   },
   "files": [
     "index.js"

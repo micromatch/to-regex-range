@@ -1,7 +1,7 @@
 /*!
- * to-regex-range <https://github.com/jonschlinkert/to-regex-range>
+ * to-regex-range <https://github.com/micromatch/to-regex-range>
  *
- * Copyright (c) 2015, 2017, Jon Schlinkert.
+ * Copyright (c) 2015-2017, Jon Schlinkert.
  * Released under the MIT License.
  */
 
