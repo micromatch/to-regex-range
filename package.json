@@ -81,10 +81,7 @@
       "./examples.js"
     ],
     "reflinks": [
-      "0-5",
-      "0-9",
-      "1-5",
-      "1-9"
+      "micromatch"
     ]
   }
 }
