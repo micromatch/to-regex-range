@@ -1,7 +1,7 @@
 {
   "name": "to-regex-range",
   "description": "Pass two numbers, get a regex-compatible source string for matching ranges. Validated against more than 2.78 million test assertions.",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "homepage": "https://github.com/micromatch/to-regex-range",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
