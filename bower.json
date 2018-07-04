@@ -11,13 +11,12 @@
     "index.js"
   ],
   "dependencies": {
-    "is-number": "^4.0.0",
-    "repeat-string": "^1.6.1"
+    "is-number": "^6.0.0"
   },
   "devDependencies": {
-    "fill-range": "^4.0.0",
-    "gulp-format-md": "^0.1.12",
-    "mocha": "^3.2.0",
+    "fill-range": "^5.0.0",
+    "gulp-format-md": "^1.0.0",
+    "mocha": "^3.5.3",
     "text-table": "^0.2.0",
     "time-diff": "^0.3.1"
   },
@@ -43,7 +42,7 @@
     "to",
     "year"
   ],
-  "version": "2.1.1",
+  "version": "3.0.0",
   "bugs": {
     "url": "https://github.com/micromatch/to-regex-range/issues"
   },
@@ -59,5 +58,9 @@
     "test",
     "test.js",
     "tmp"
+  ],
+  "contributors": [
+    "Jon Schlinkert (http://twitter.com/jonschlinkert)",
+    "Rouven Weßling (www.rouvenwessling.de)"
   ]
 }
