@@ -1,24 +1,17 @@
 'use strict';
 
 require('mocha');
-var assert = require('assert');
-var fill = require('fill-range');
-var toRange = require('..');
-var count = 0;
+const assert = require('assert');
+const fill = require('fill-range');
+const toRange = require('..');
+let count = 0;
 
-function toRangeRegex(min, max, options) {
-  return toRegex(toRange(min, max, options));
-}
-
-function toRegex(str) {
-  return new RegExp('^(?:' + str + ')$');
-}
+const toRegex = str => new RegExp(`^(?:${str})$`);
+const toRangeRegex = (min, max, options) => toRegex(toRange(min, max, options));
 
 function match(min, max) {
-  var regex = toRangeRegex(min, max);
-  return function(num) {
-    return regex.test(String(num));
-  };
+  const regex = toRangeRegex(min, max);
+  return num => regex.test(String(num));
 }
 
 function matchRange(min, max, expected, match, notMatch) {
@@ -26,33 +19,33 @@ function matchRange(min, max, expected, match, notMatch) {
     throw new RangeError('range is too big');
   }
 
-  var actual = toRange(min, max);
-  var msg = actual + ' => ' + expected;
+  let actual = toRange(min, max);
+  let msg = actual + ' => ' + expected;
 
   // test expected string
   assert.strictEqual(actual, expected, msg);
 
-  var re = toRegex(actual);
-  for (var i = 0; i < match.length; i++) {
+  let re = toRegex(actual);
+  for (let i = 0; i < match.length; i++) {
     assert(re.test(match[i]), 'should match ' + msg);
     count++;
   }
 
   if (!Array.isArray(notMatch)) return;
-  for (var j = 0; j < notMatch.length; j++) {
+  for (let j = 0; j < notMatch.length; j++) {
     assert(!re.test(notMatch[j]), 'should not match ' + msg);
     count++;
   }
 }
 
 function verifyRange(min, max, from, to, zeros) {
-  var isMatch = match(min, max);
-  var minNum = Math.min(min, max);
-  var maxNum = Math.max(min, max);
-  var num = from - 1;
+  let isMatch = match(min, max);
+  let minNum = Math.min(min, max);
+  let maxNum = Math.max(min, max);
+  let num = from - 1;
 
   while (++num < to) {
-    var n = Number(num);
+    let n = Number(num);
     if (inRange(minNum, maxNum, n)) {
       assert(isMatch(num), 'should match "' + num + '"');
     } else {
@@ -63,17 +56,17 @@ function verifyRange(min, max, from, to, zeros) {
 }
 
 function verifyZeros(min, max, from, to) {
-  var range = fill(from, to);
-  var len = range.length;
-  var idx = -1;
+  let range = fill(from, to);
+  let len = range.length;
+  let idx = -1;
 
-  var isMatch = match(min, max);
-  var minNum = Math.min(min, max);
-  var maxNum = Math.max(min, max);
+  let isMatch = match(min, max);
+  let minNum = Math.min(min, max);
+  let maxNum = Math.max(min, max);
 
   while (++idx < len) {
-    var num = range[idx];
-    var n = Number(num);
+    let num = range[idx];
+    let n = Number(num);
     if (inRange(minNum, maxNum, n)) {
       assert(isMatch(num), 'should match "' + num + '"');
     } else {
@@ -89,22 +82,18 @@ function inRange(min, max, num) {
 
 describe('to-regex-range', function() {
   after(function() {
-    var num = (+(+(count).toFixed(2))).toLocaleString();
+    let num = (+(+(count).toFixed(2))).toLocaleString();
     console.log();
     console.log('   ', num, 'values tested');
   });
 
   describe('range', function() {
     it('should throw an error when the first arg is invalid:', function() {
-      assert.throws(function() {
-        toRange();
-      }, /toRegexRange: first argument is invalid/);
+      assert.throws(() => toRange(), /expected/);
     });
 
     it('should throw an error when the second arg is invalid:', function() {
-      assert.throws(function() {
-        toRange(1, {});
-      }, /toRegexRange: second argument is invalid/);
+      assert.throws(() => toRange(1, {}), /expected/);
     });
   });
 

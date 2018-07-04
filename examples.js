@@ -1,18 +1,18 @@
 'use strict';
 
-var toRegexRange = require('./');
-var table = require('text-table');
-var Time = require('time-diff');
-var time = new Time();
+const toRegexRange = require('./');
+const table = require('text-table');
+const Time = require('time-diff');
+const time = new Time();
 
 /**
  * $ node examples.js
  */
 
 function toRange(min, max) {
-  var key = 'to-range' + min + max;
+  let key = 'to-range' + min + max;
   time.start(key);
-  var str = toRegexRange(min, max);
+  let str = toRegexRange(min, max);
   return [
     '',
     '`toRegexRange(\'' + min + ', ' + max + '\')`',
@@ -24,12 +24,12 @@ function toRange(min, max) {
 
 toRange('1', '3');
 
-var rows = [
+let rows = [
   ['', '**Range**', '**Result**', '**Compile time**', ''],
   ['', '--- ', '--- ', '---', ''],
 ];
 
-var examples = [
+let examples = [
   // ['0001', '5555'],
   // ['1', '5555'],
   // ['1', '555'],
@@ -59,7 +59,7 @@ var examples = [
   rows.push(toRange.apply(null, args));
 });
 
-var text = table(rows, {hsep: ' | '});
+let text = table(rows, {hsep: ' | '});
 console.log(text);
 
 /**
