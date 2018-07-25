@@ -59,9 +59,9 @@ If you're interested in learning more about [character classes](http://www.regul
 
 ### Heavily tested
 
-As of July 04, 2018, this library runs [2,783,483 test assertions](./test/test.js) against generated regex-ranges to provide brute-force verification that results are indeed correct.
+As of July 25, 2018, this library runs [2,783,483 test assertions](./test/test.js) against generated regex-ranges to provide brute-force verification that results are indeed correct.
 
-Tests run in ~870ms on my MacBook Pro, 2.5 GHz Intel Core i7.
+Tests run in ~580ms on my MacBook Pro, 2.5 GHz Intel Core i7.
 
 ### Highly optimized
 
@@ -167,46 +167,27 @@ Thus, we relax zeros by default to provide a more predictable experience for use
 
 ## Examples
 
-| **Range** | **Result** | **Compile time** | 
-| --- | --- | --- |
-| `toRegexRange('5, 5')` | `5` | _15μs_
- |
-| `toRegexRange('5, 6')` | `5\ | 6` | _21μs_
- |
-| `toRegexRange('29, 51')` | `29\ | [34](https://github.com//0-9)\ | 5[01]` | _314μs_
- |
-| `toRegexRange('31, 877')` | `3[1-9]\ | [4-9](https://github.com//0-9)\ | [1-7](https://github.com//0-92)\ | 8[0-6](https://github.com//0-9)\ | 87[0-7]` | _88μs_
- |
-| `toRegexRange('111, 555')` | `11[1-9]\ | 1[2-9](https://github.com//0-9)\ | [2-4](https://github.com//0-92)\ | 5[0-4](https://github.com//0-9)\ | 55[0-5]` | _72μs_
- |
-| `toRegexRange('-10, 10')` | `-[1-9]\ | -?10\ | [0-9](https://github.com//0-9)` | _67μs_
- |
-| `toRegexRange('-100, -10')` | `-1[0-9](https://github.com//0-9)\ | -[2-9](https://github.com//0-9)\ | -100` | _53μs_
- |
-| `toRegexRange('-100, 100')` | `-[1-9]\ | -?[1-9](https://github.com//0-9)\ | -?100\ | [0-9](https://github.com//0-9)` | _68μs_
- |
-| `toRegexRange('001, 100')` | `0{2}[1-9]\ | 0[1-9](https://github.com//0-9)\ | 100` | _121μs_
- |
-| `toRegexRange('0010, 1000')` | `0{2}1[0-9](https://github.com//0-9)\ | 0{2}[2-9](https://github.com//0-9)\ | 0[1-9](https://github.com//0-92)\ | 1000` | _73μs_
- |
-| `toRegexRange('1, 2')` | `1\ | 2` | _10μs_
- |
-| `toRegexRange('1, 5')` | `[1-5]` | _26μs_
- |
-| `toRegexRange('1, 10')` | `[1-9]\ | 10` | _33μs_
- |
-| `toRegexRange('1, 100')` | `[1-9]\ | [1-9](https://github.com//0-9)\ | 100` | _67μs_
- |
-| `toRegexRange('1, 1000')` | `[1-9]\ | [1-9](https://github.com//0-91,2)\ | 1000` | _50μs_
- |
-| `toRegexRange('1, 10000')` | `[1-9]\ | [1-9](https://github.com//0-91,3)\ | 10000` | _65μs_
- |
-| `toRegexRange('1, 100000')` | `[1-9]\ | [1-9](https://github.com//0-91,4)\ | 100000` | _69μs_
- |
-| `toRegexRange('1, 1000000')` | `[1-9]\ | [1-9](https://github.com//0-91,5)\ | 1000000` | _74μs_
- |
-| `toRegexRange('1, 10000000')` | `[1-9]\ | [1-9](https://github.com//0-91,6)\ | 10000000` | _86μs_
- |
+| **Range**                     | **Result**                                                  | **Compile time** |
+| ---                           | ---                                                         | ---              |
+| `toRegexRange('5, 5')`        | `5`                                                         | _20μs_           |
+| `toRegexRange('5, 6')`        | `5\|6`                                                      | _30μs_           |
+| `toRegexRange('29, 51')`      | `29\|[34][0-9]\|5[01]`                                      | _341μs_          |
+| `toRegexRange('31, 877')`     | `3[1-9]\|[4-9][0-9]\|[1-7][0-9]{2}\|8[0-6][0-9]\|87[0-7]`   | _52μs_           |
+| `toRegexRange('111, 555')`    | `11[1-9]\|1[2-9][0-9]\|[2-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]` | _37μs_           |
+| `toRegexRange('-10, 10')`     | `-[1-9]\|-?10\|[0-9]`                                       | _43μs_           |
+| `toRegexRange('-100, -10')`   | `-1[0-9]\|-[2-9][0-9]\|-100`                                | _39μs_           |
+| `toRegexRange('-100, 100')`   | `-[1-9]\|-?[1-9][0-9]\|-?100\|[0-9]`                        | _54μs_           |
+| `toRegexRange('001, 100')`    | `0{2}[1-9]\|0[1-9][0-9]\|100`                               | _110μs_          |
+| `toRegexRange('0010, 1000')`  | `0{2}1[0-9]\|0{2}[2-9][0-9]\|0[1-9][0-9]{2}\|1000`          | _53μs_           |
+| `toRegexRange('1, 2')`        | `1\|2`                                                      | _16μs_           |
+| `toRegexRange('1, 5')`        | `[1-5]`                                                     | _21μs_           |
+| `toRegexRange('1, 10')`       | `[1-9]\|10`                                                 | _28μs_           |
+| `toRegexRange('1, 100')`      | `[1-9]\|[1-9][0-9]\|100`                                    | _50μs_           |
+| `toRegexRange('1, 1000')`     | `[1-9]\|[1-9][0-9]{1,2}\|1000`                              | _68μs_           |
+| `toRegexRange('1, 10000')`    | `[1-9]\|[1-9][0-9]{1,3}\|10000`                             | _69μs_           |
+| `toRegexRange('1, 100000')`   | `[1-9]\|[1-9][0-9]{1,4}\|100000`                            | _54μs_           |
+| `toRegexRange('1, 1000000')`  | `[1-9]\|[1-9][0-9]{1,5}\|1000000`                           | _48μs_           |
+| `toRegexRange('1, 10000000')` | `[1-9]\|[1-9][0-9]{1,6}\|10000000`                          | _56μs_           |
 
 ## Heads up!
 
@@ -249,26 +230,26 @@ Inspired by the python library [range-regex](https://github.com/dimka665/range-r
 
 ## About
 
-<details>
-<summary><strong>Contributing</strong></summary>
+### Related projects
+
+* [expand-range](https://www.npmjs.com/package/expand-range): Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. Used… [more](https://github.com/jonschlinkert/expand-range) | [homepage](https://github.com/jonschlinkert/expand-range "Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. Used by [micromatch].")
+* [fill-range](https://www.npmjs.com/package/fill-range): Fill in a range of numbers or letters, optionally passing an increment or `step` to… [more](https://github.com/jonschlinkert/fill-range) | [homepage](https://github.com/jonschlinkert/fill-range "Fill in a range of numbers or letters, optionally passing an increment or `step` to use, or create a regex-compatible range with `options.toRegex`")
+* [micromatch](https://www.npmjs.com/package/micromatch): Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch. | [homepage](https://github.com/micromatch/micromatch "Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch.")
+* [repeat-element](https://www.npmjs.com/package/repeat-element): Create an array by repeating the given value n times. | [homepage](https://github.com/jonschlinkert/repeat-element "Create an array by repeating the given value n times.")
+* [repeat-string](https://www.npmjs.com/package/repeat-string): Repeat the given string n times. Fastest implementation for repeating a string. | [homepage](https://github.com/jonschlinkert/repeat-string "Repeat the given string n times. Fastest implementation for repeating a string.")
+
+### Contributing
 
 Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](../../issues/new).
 
-</details>
+### Contributors
 
-<details>
-<summary><strong>Running Tests</strong></summary>
+| **Commits** | **Contributor** |  
+| --- | --- |  
+| 61 | [jonschlinkert](https://github.com/jonschlinkert) |  
+| 2  | [realityking](https://github.com/realityking) |  
 
-Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
-
-```sh
-$ npm install && npm test
-```
-
-</details>
-
-<details>
-<summary><strong>Building docs</strong></summary>
+### Building docs
 
 _(This project's readme.md is generated by [verb](https://github.com/verbose/verb-generate-readme), please don't edit the readme directly. Any changes to the readme must be made in the [.verb.md](.verb.md) readme template.)_
 
@@ -278,24 +259,13 @@ To generate the readme, run the following command:
 $ npm install -g verbose/verb#dev verb-generate-readme && verb
 ```
 
-</details>
+### Running tests
 
-### Related projects
+Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
 
-You might also be interested in these projects:
-
-* [expand-range](https://www.npmjs.com/package/expand-range): Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. Used… [more](https://github.com/jonschlinkert/expand-range) | [homepage](https://github.com/jonschlinkert/expand-range "Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. Used by [micromatch].")
-* [fill-range](https://www.npmjs.com/package/fill-range): Fill in a range of numbers or letters, optionally passing an increment or `step` to… [more](https://github.com/jonschlinkert/fill-range) | [homepage](https://github.com/jonschlinkert/fill-range "Fill in a range of numbers or letters, optionally passing an increment or `step` to use, or create a regex-compatible range with `options.toRegex`")
-* [micromatch](https://www.npmjs.com/package/micromatch): Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch. | [homepage](https://github.com/micromatch/micromatch "Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch.")
-* [repeat-element](https://www.npmjs.com/package/repeat-element): Create an array by repeating the given value n times. | [homepage](https://github.com/jonschlinkert/repeat-element "Create an array by repeating the given value n times.")
-* [repeat-string](https://www.npmjs.com/package/repeat-string): Repeat the given string n times. Fastest implementation for repeating a string. | [homepage](https://github.com/jonschlinkert/repeat-string "Repeat the given string n times. Fastest implementation for repeating a string.")
-
-### Contributors
-
-| **Commits** | **Contributor** | 
-| --- | --- |
-| 56 | [jonschlinkert](https://github.com/jonschlinkert) |
-| 2 | [realityking](https://github.com/realityking) |
+```sh
+$ npm install && npm test
+```
 
 ### Author
 
@@ -312,4 +282,4 @@ Released under the [MIT License](LICENSE).
 
 ***
 
-_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on July 04, 2018._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.7.0, on July 25, 2018._
