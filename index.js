@@ -224,7 +224,9 @@ function filterPatterns(arr, comparison, prefix, intersection, options) {
 
 function zip(a, b) {
   let arr = [];
-  for (let ch in a) arr.push([a[ch], b[ch]]);
+  for (let i = 0; i < a.length; i++) {
+    arr.push([a[i], b[i]]);
+  }
   return arr;
 }
 
