@@ -98,6 +98,29 @@ console.log(re.test('96')); //=> false
 
 ## Options
 
+### options.antlr
+
+**Type**: `boolean`
+
+**Deafault**: `undefined`
+
+Enable generate regex to support antlr
+
+```js
+var toRegexRange = require('to-regex-range');
+var source = toRegexRange('-128', '127', {capture: true, antlr: true});
+console.log("-128 -> 127 = "+source);
+
+-128 -> 127 = ('-'[1-9]
+|'-''12'[0-8]
+|'-'?[1-9][0-9]
+|'-'?'1'[01][0-9]
+|[0-9]
+|'12'[0-7])
+```
+
+### options.shorthand
+
 ### options.capture
 
 **Type**: `boolean`
