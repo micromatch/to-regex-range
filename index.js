@@ -7,7 +7,13 @@
 
 'use strict';
 
-const isNumber = require('is-number');
+//const isNumber = require('is-number');
+
+function isNumber(n){
+  var re = new RegExp('^-?[0-9]+$');
+  //console.log(n+'='+re.test(n));
+  return re.test(n);
+}
 
 function toRegexRange(min, max, options) {
   toRegexRange.cache = {};
@@ -90,7 +96,11 @@ function siftPatterns(neg, pos, options) {
     intersected = filterPatterns(neg, pos, '-?', true, options) || [];
   }
   let subpatterns = onlyNegative.concat(intersected).concat(onlyPositive);
-  return subpatterns.join('|');
+  if (options.antlr){
+    return subpatterns.join('\n|');
+  }else{
+    return subpatterns.join('|');
+  }
 }
 
 function splitToRanges(min, max) {
@@ -137,34 +147,51 @@ function rangeToPattern(start, stop, options) {
 
   let pattern = '';
   let digits = 0;
+  var singleQuote=false;
 
   while (++i < len) {
     let numbers = zipped[i];
     let startDigit = numbers[0];
     let stopDigit = numbers[1];
-
+    //console.log("startDigit="+startDigit);
     if (startDigit === stopDigit) {
       if (options.antlr) {
-        if (pattern==""){
-	        pattern="'";
+        if (!singleQuote){
+          pattern="'";
+          singleQuote=true;
         }
       }
       pattern += startDigit;
 
     } else if (startDigit !== '0' || stopDigit !== '9') {
       if (options.antlr) {
-        if (pattern!=""){
+        if (singleQuote){
           pattern+="'";
+          singleQuote=false;
         }
       }
       pattern += toCharacterClass(startDigit, stopDigit);
-
     } else {
-      digits += 1;
+      if (options.antlr){
+        if (options.antlr) {
+          if (singleQuote){
+            pattern+="'";
+            singleQuote=false;
+          }
+        }
+        pattern += toCharacterClass(startDigit, stopDigit);
+      }else{
+        digits += 1;
+      }
     }
   }
 
   if (digits) {
+    if (options.antlr) {
+      if (singleQuote){
+        pattern+="'";
+      }
+    }
     pattern += options.shorthand ? '\\d' : '[0-9]';
   }
 
@@ -280,6 +307,7 @@ function toQuantifier(digits) {
   if (!stop && (!start || start === 1)) {
     return '';
   }
+  //console.log("digits="+digits+' == '+'{' + start + stop + '}');
   return '{' + start + stop + '}';
 }
 
