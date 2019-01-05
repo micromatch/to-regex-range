@@ -10,6 +10,7 @@
 const isNumber = require('is-number');
 
 function toRegexRange(min, max, options) {
+  toRegexRange.cache = {};
   if (isNumber(min) === false) {
     throw new TypeError('toRegexRange: expected the first argument to be a number');
   }
@@ -75,12 +76,19 @@ function toRegexRange(min, max, options) {
   return tok.result;
 }
 
-toRegexRange.cache = {};
-
 function siftPatterns(neg, pos, options) {
-  let onlyNegative = filterPatterns(neg, pos, '-', false, options) || [];
-  let onlyPositive = filterPatterns(pos, neg, '', false, options) || [];
-  let intersected = filterPatterns(neg, pos, '-?', true, options) || [];
+  let onlyNegative;
+  let onlyPositive;
+  let intersected;
+  if (options.antlr){
+    onlyNegative = filterPatterns(neg, pos, "'-'", false, options) || [];
+    onlyPositive = filterPatterns(pos, neg, '', false, options) || [];
+    intersected = filterPatterns(neg, pos, "'-'?", true, options) || [];
+  }else{
+    onlyNegative = filterPatterns(neg, pos, '-', false, options) || [];
+    onlyPositive = filterPatterns(pos, neg, '', false, options) || [];
+    intersected = filterPatterns(neg, pos, '-?', true, options) || [];
+  }
   let subpatterns = onlyNegative.concat(intersected).concat(onlyPositive);
   return subpatterns.join('|');
 }
@@ -136,15 +144,19 @@ function rangeToPattern(start, stop, options) {
     let stopDigit = numbers[1];
 
     if (startDigit === stopDigit) {
-if (pattern==""){
-	pattern="'";
-}
+      if (options.antlr) {
+        if (pattern==""){
+	        pattern="'";
+        }
+      }
       pattern += startDigit;
 
     } else if (startDigit !== '0' || stopDigit !== '9') {
-if (pattern!=""){
-pattern+="'";
-}
+      if (options.antlr) {
+        if (pattern!=""){
+          pattern+="'";
+        }
+      }
       pattern += toCharacterClass(startDigit, stopDigit);
 
     } else {
@@ -214,11 +226,11 @@ function filterPatterns(arr, comparison, prefix, intersection, options) {
     }
 
     if (!intersection && !contains(comparison, 'string', ele)) {
-      res.push("'"+prefix +"'"+ ele);
+        res.push(prefix+ ele);
     }
 
     if (intersection && contains(comparison, 'string', ele)) {
-      res.push("'"+prefix +"'"+ ele);
+        res.push(prefix+ ele);
     }
   }
   return res;
