@@ -136,9 +136,15 @@ function rangeToPattern(start, stop, options) {
     let stopDigit = numbers[1];
 
     if (startDigit === stopDigit) {
+if (pattern==""){
+	pattern="'";
+}
       pattern += startDigit;
 
     } else if (startDigit !== '0' || stopDigit !== '9') {
+if (pattern!=""){
+pattern+="'";
+}
       pattern += toCharacterClass(startDigit, stopDigit);
 
     } else {
@@ -208,11 +214,11 @@ function filterPatterns(arr, comparison, prefix, intersection, options) {
     }
 
     if (!intersection && !contains(comparison, 'string', ele)) {
-      res.push(prefix + ele);
+      res.push("'"+prefix +"'"+ ele);
     }
 
     if (intersection && contains(comparison, 'string', ele)) {
-      res.push(prefix + ele);
+      res.push("'"+prefix +"'"+ ele);
     }
   }
   return res;
