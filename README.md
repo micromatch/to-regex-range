@@ -119,8 +119,6 @@ console.log("-128 -> 127 = "+source);
 |'12'[0-7])
 ```
 
-### options.shorthand
-
 ### options.capture
 
 **Type**: `boolean`
