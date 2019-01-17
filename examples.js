@@ -12,7 +12,7 @@ const time = new Time();
 function toRange(min, max) {
   let key = 'to-range' + min + max;
   time.start(key);
-  let str = toRegexRange(min, max);
+  let str = toRegexRange(min, max, { wrap: false });
   return [
     '',
     '`toRegexRange(\'' + min + ', ' + max + '\')`',
@@ -59,7 +59,7 @@ let examples = [
   rows.push(toRange.apply(null, args));
 });
 
-let text = table(rows, {hsep: ' | '});
+let text = table(rows, { hsep: ' | ' });
 console.log(text);
 
 /**

@@ -82,7 +82,7 @@ function inRange(min, max, num) {
 
 describe('to-regex-range', function() {
   after(function() {
-    let num = (+(+(count).toFixed(2))).toLocaleString();
+    let num = (+(+count.toFixed(2))).toLocaleString();
     console.log();
     console.log('   ', num, 'values tested');
   });
@@ -95,11 +95,29 @@ describe('to-regex-range', function() {
     it('should throw an error when the second arg is invalid:', function() {
       assert.throws(() => toRange(1, {}), /expected/);
     });
+
+    it('should match the given numbers', function() {
+      let oneFifty = new RegExp('^' + toRange(1, 150) + '$');
+      assert(oneFifty.test('125'));
+      assert(!oneFifty.test('0'));
+      assert(oneFifty.test('1'));
+      assert(oneFifty.test('126'));
+      assert(oneFifty.test('150'));
+      assert(!oneFifty.test('151'));
+
+      let oneTwentyFive = new RegExp('^' + toRange(1, 125) + '$');
+      assert(oneTwentyFive.test('125'));
+      assert(!oneTwentyFive.test('0'));
+      assert(oneTwentyFive.test('1'));
+      assert(!oneTwentyFive.test('126'));
+      assert(!oneTwentyFive.test('150'));
+      assert(!oneTwentyFive.test('151'));
+    });
   });
 
   describe('minimum / maximum', function() {
     it('should reverse `min/max` when the min is larger than the max:', function() {
-      assert.strictEqual(toRange(55, 10), '1[0-9]|[2-4][0-9]|5[0-5]');
+      assert.strictEqual(toRange(55, 10), '(?:1[0-9]|[2-4][0-9]|5[0-5])');
     });
   });
 
@@ -118,74 +136,74 @@ describe('to-regex-range', function() {
 
     it('should support strings:', function() {
       assert.strictEqual(toRange('1', '5'), '[1-5]');
-      assert.strictEqual(toRange('10', '50'), '1[0-9]|[2-4][0-9]|50');
+      assert.strictEqual(toRange('10', '50'), '(?:1[0-9]|[2-4][0-9]|50)');
     });
 
     it('should support padded ranges:', function() {
       assert.strictEqual(toRange('001', '005'), '0{2}[1-5]');
       assert.strictEqual(toRange('01', '05'), '0[1-5]');
-      assert.strictEqual(toRange('001', '100'), '0{2}[1-9]|0[1-9][0-9]|100');
-      assert.strictEqual(toRange('0001', '1000'), '0{3}[1-9]|0{2}[1-9][0-9]|0[1-9][0-9]{2}|1000');
+      assert.strictEqual(toRange('001', '100'), '(?:0{2}[1-9]|0[1-9][0-9]|100)');
+      assert.strictEqual(toRange('0001', '1000'), '(?:0{3}[1-9]|0{2}[1-9][0-9]|0[1-9][0-9]{2}|1000)');
     });
 
     it('should work when padding is imbalanced:', function() {
-      assert.strictEqual(toRange('001', '105'), '0{2}[1-9]|0[1-9][0-9]|10[0-5]');
-      assert.strictEqual(toRange('01', '105'), '0{2}[1-9]|0[1-9][0-9]|10[0-5]');
-      assert.strictEqual(toRange('010', '105'), '01[0-9]|0[2-9][0-9]|10[0-5]');
-      assert.strictEqual(toRange('010', '1005'), '0{2}1[0-9]|0{2}[2-9][0-9]|0[1-9][0-9]{2}|100[0-5]');
+      assert.strictEqual(toRange('001', '105'), '(?:0{2}[1-9]|0[1-9][0-9]|10[0-5])');
+      assert.strictEqual(toRange('01', '105'), '(?:0{2}[1-9]|0[1-9][0-9]|10[0-5])');
+      assert.strictEqual(toRange('010', '105'), '(?:01[0-9]|0[2-9][0-9]|10[0-5])');
+      assert.strictEqual(toRange('010', '1005'), '(?:0{2}1[0-9]|0{2}[2-9][0-9]|0[1-9][0-9]{2}|100[0-5])');
       assert.strictEqual(toRange('0001', '1000'), toRange('001', '1000'));
       assert.strictEqual(toRange('0001', '1000'), toRange('01', '1000'));
     });
 
     it('should generate regex strings for negative patterns', function() {
-      assert.strictEqual(toRange(-1, 0), '-1|0');
-      assert.strictEqual(toRange(-1, 1), '-1|[01]');
+      assert.strictEqual(toRange(-1, 0), '(?:-1|0)');
+      assert.strictEqual(toRange(-1, 1), '(?:-1|[01])');
       assert.strictEqual(toRange(-4, -2), '-[2-4]');
-      assert.strictEqual(toRange(-3, 1), '-[1-3]|[01]');
-      assert.strictEqual(toRange(-2, 0), '-[12]|0');
-      assert.strictEqual(toRange(-1, 3), '-1|[0-3]');
+      assert.strictEqual(toRange(-3, 1), '(?:-[1-3]|[01])');
+      assert.strictEqual(toRange(-2, 0), '(?:-[12]|0)');
+      assert.strictEqual(toRange(-1, 3), '(?:-1|[0-3])');
       matchRange(-1, -1, '-1', [-1], [-2, 0, 1]);
-      matchRange(-1, -10, '-[1-9]|-10', [-1, -5, -10], [-11, 0]);
-      matchRange(-1, 3, '-1|[0-3]', [-1, 0, 1, 2, 3], [-2, 4]);
+      matchRange(-1, -10, '(?:-[1-9]|-10)', [-1, -5, -10], [-11, 0]);
+      matchRange(-1, 3, '(?:-1|[0-3])', [-1, 0, 1, 2, 3], [-2, 4]);
     });
 
     it('should wrap patterns when options.capture is true', function() {
-      assert.strictEqual(toRange(-1, 0, {capture: true}), '(-1|0)');
-      assert.strictEqual(toRange(-1, 1, {capture: true}), '(-1|[01])');
-      assert.strictEqual(toRange(-4, -2, {capture: true}), '-[2-4]');
-      assert.strictEqual(toRange(-3, 1, {capture: true}), '(-[1-3]|[01])');
-      assert.strictEqual(toRange(-2, 0, {capture: true}), '(-[12]|0)');
-      assert.strictEqual(toRange(-1, 3, {capture: true}), '(-1|[0-3])');
+      assert.strictEqual(toRange(-1, 0, { capture: true }), '(-1|0)');
+      assert.strictEqual(toRange(-1, 1, { capture: true }), '(-1|[01])');
+      assert.strictEqual(toRange(-4, -2, { capture: true }), '(-[2-4])');
+      assert.strictEqual(toRange(-3, 1, { capture: true }), '(-[1-3]|[01])');
+      assert.strictEqual(toRange(-2, 0, { capture: true }), '(-[12]|0)');
+      assert.strictEqual(toRange(-1, 3, { capture: true }), '(-1|[0-3])');
     });
 
     it('should generate regex strings for positive patterns', function() {
       assert.strictEqual(toRange(1, 1), '1');
-      assert.strictEqual(toRange(0, 1), '0|1');
+      assert.strictEqual(toRange(0, 1), '(?:0|1)');
       assert.strictEqual(toRange(0, 2), '[0-2]');
-      assert.strictEqual(toRange(65666, 65667), '65666|65667');
-      assert.strictEqual(toRange(12, 3456), '1[2-9]|[2-9][0-9]|[1-9][0-9]{2}|[12][0-9]{3}|3[0-3][0-9]{2}|34[0-4][0-9]|345[0-6]');
-      assert.strictEqual(toRange(1, 3456), '[1-9]|[1-9][0-9]{1,2}|[12][0-9]{3}|3[0-3][0-9]{2}|34[0-4][0-9]|345[0-6]');
-      assert.strictEqual(toRange(1, 10), '[1-9]|10');
-      assert.strictEqual(toRange(1, 19), '[1-9]|1[0-9]');
-      assert.strictEqual(toRange(1, 99), '[1-9]|[1-9][0-9]');
-      assert.strictEqual(toRange(1, 100), '[1-9]|[1-9][0-9]|100');
-      assert.strictEqual(toRange(1, 1000), '[1-9]|[1-9][0-9]{1,2}|1000');
-      assert.strictEqual(toRange(1, 10000), '[1-9]|[1-9][0-9]{1,3}|10000');
-      assert.strictEqual(toRange(1, 100000), '[1-9]|[1-9][0-9]{1,4}|100000');
-      assert.strictEqual(toRange(1, 9999999), '[1-9]|[1-9][0-9]{1,6}');
-      assert.strictEqual(toRange(99, 100000), '99|[1-9][0-9]{2,4}|100000');
+      assert.strictEqual(toRange(65666, 65667), '(?:65666|65667)');
+      assert.strictEqual(toRange(12, 3456), '(?:1[2-9]|[2-9][0-9]|[1-9][0-9]{2}|[12][0-9]{3}|3[0-3][0-9]{2}|34[0-4][0-9]|345[0-6])');
+      assert.strictEqual(toRange(1, 3456), '(?:[1-9]|[1-9][0-9]{1,2}|[12][0-9]{3}|3[0-3][0-9]{2}|34[0-4][0-9]|345[0-6])');
+      assert.strictEqual(toRange(1, 10), '(?:[1-9]|10)');
+      assert.strictEqual(toRange(1, 19), '(?:[1-9]|1[0-9])');
+      assert.strictEqual(toRange(1, 99), '(?:[1-9]|[1-9][0-9])');
+      assert.strictEqual(toRange(1, 100), '(?:[1-9]|[1-9][0-9]|100)');
+      assert.strictEqual(toRange(1, 1000), '(?:[1-9]|[1-9][0-9]{1,2}|1000)');
+      assert.strictEqual(toRange(1, 10000), '(?:[1-9]|[1-9][0-9]{1,3}|10000)');
+      assert.strictEqual(toRange(1, 100000), '(?:[1-9]|[1-9][0-9]{1,4}|100000)');
+      assert.strictEqual(toRange(1, 9999999), '(?:[1-9]|[1-9][0-9]{1,6})');
+      assert.strictEqual(toRange(99, 100000), '(?:99|[1-9][0-9]{2,4}|100000)');
 
-      matchRange(99, 100000, '99|[1-9][0-9]{2,4}|100000', [99, 999, 989, 100, 9999, 9899, 10009, 10999, 100000], [0, 9, 100001, 100009]);
+      matchRange(99, 100000, '(?:99|[1-9][0-9]{2,4}|100000)', [99, 999, 989, 100, 9999, 9899, 10009, 10999, 100000], [0, 9, 100001, 100009]);
     });
 
     it('should optimize regexes', function() {
-      assert.strictEqual(toRange(-9, 9), '-[1-9]|[0-9]');
-      assert.strictEqual(toRange(-19, 19), '-[1-9]|-?1[0-9]|[0-9]');
-      assert.strictEqual(toRange(-29, 29), '-[1-9]|-?[12][0-9]|[0-9]');
-      assert.strictEqual(toRange(-99, 99), '-[1-9]|-?[1-9][0-9]|[0-9]');
-      assert.strictEqual(toRange(-999, 999), '-[1-9]|-?[1-9][0-9]{1,2}|[0-9]');
-      assert.strictEqual(toRange(-9999, 9999), '-[1-9]|-?[1-9][0-9]{1,3}|[0-9]');
-      assert.strictEqual(toRange(-99999, 99999), '-[1-9]|-?[1-9][0-9]{1,4}|[0-9]');
+      assert.strictEqual(toRange(-9, 9), '(?:-[1-9]|[0-9])');
+      assert.strictEqual(toRange(-19, 19), '(?:-[1-9]|-?1[0-9]|[0-9])');
+      assert.strictEqual(toRange(-29, 29), '(?:-[1-9]|-?[12][0-9]|[0-9])');
+      assert.strictEqual(toRange(-99, 99), '(?:-[1-9]|-?[1-9][0-9]|[0-9])');
+      assert.strictEqual(toRange(-999, 999), '(?:-[1-9]|-?[1-9][0-9]{1,2}|[0-9])');
+      assert.strictEqual(toRange(-9999, 9999), '(?:-[1-9]|-?[1-9][0-9]{1,3}|[0-9])');
+      assert.strictEqual(toRange(-99999, 99999), '(?:-[1-9]|-?[1-9][0-9]{1,4}|[0-9])');
     });
   });
 

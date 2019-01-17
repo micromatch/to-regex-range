@@ -1,7 +1,7 @@
 /*!
  * to-regex-range <https://github.com/micromatch/to-regex-range>
  *
- * Copyright (c) 2015-2018, present, Jon Schlinkert.
+ * Copyright (c) 2015-present, Jon Schlinkert.
  * Released under the MIT License.
  */
 
@@ -39,7 +39,10 @@ function toRegexRange(min, max, options) {
     if (options.capture) {
       return '(' + result + ')';
     }
-    return result;
+    if (options.wrap === false) {
+      return result;
+    }
+    return '(?:' + result + ')';
   }
 
   let isPadded = padding(min) || padding(max);
@@ -67,8 +70,10 @@ function toRegexRange(min, max, options) {
   tok.positives = positives;
   tok.result = siftPatterns(negatives, positives, options);
 
-  if (options.capture && (positives.length + negatives.length) > 1) {
+  if (options.capture) {
     tok.result = '(' + tok.result + ')';
+  } else if (options.wrap !== false && positives.length + negatives.length > 1) {
+    tok.result = '(?:' + tok.result + ')';
   }
 
   toRegexRange.cache[key] = tok;
@@ -219,7 +224,7 @@ function filterPatterns(arr, comparison, prefix, intersection, options) {
 }
 
 /**
- * Zip strings (`for in` can be used on string characters)
+ * Zip strings
  */
 
 function zip(a, b) {
