@@ -9,12 +9,12 @@
 
 const isNumber = require('is-number');
 
-function toRegexRange(min, max, options) {
+const toRegexRange = (min, max, options) => {
   if (isNumber(min) === false) {
     throw new TypeError('toRegexRange: expected the first argument to be a number');
   }
 
-  if (typeof max === 'undefined' || min === max) {
+  if (max === void 0 || min === max) {
     return String(min);
   }
 
@@ -22,13 +22,19 @@ function toRegexRange(min, max, options) {
     throw new TypeError('toRegexRange: expected the second argument to be a number.');
   }
 
-  options = options || {};
-  let relax = String(options.relaxZeros);
-  let shorthand = String(options.shorthand);
-  let capture = String(options.capture);
-  let key = min + ':' + max + '=' + relax + shorthand + capture;
-  if (toRegexRange.cache.hasOwnProperty(key)) {
-    return toRegexRange.cache[key].result;
+  let opts = { relaxZeros: true, ...options };
+  if (typeof opts.strictZeros === 'boolean') {
+    opts.relaxZeros = opts.strictZeros === false;
+  }
+
+  let relax = String(opts.relaxZeros);
+  let shorthand = String(opts.shorthand);
+  let capture = String(opts.capture);
+  let wrap = String(opts.wrap);
+  let cacheKey = min + ':' + max + '=' + relax + shorthand + capture + wrap;
+
+  if (toRegexRange.cache.hasOwnProperty(cacheKey)) {
+    return toRegexRange.cache[cacheKey].result;
   }
 
   let a = Math.min(min, max);
@@ -36,53 +42,50 @@ function toRegexRange(min, max, options) {
 
   if (Math.abs(a - b) === 1) {
     let result = min + '|' + max;
-    if (options.capture) {
-      return '(' + result + ')';
+    if (opts.capture) {
+      return `(${result})`;
     }
-    if (options.wrap === false) {
+    if (opts.wrap === false) {
       return result;
     }
-    return '(?:' + result + ')';
+    return `(?:${result})`;
   }
 
-  let isPadded = padding(min) || padding(max);
+  let isPadded = hasPadding(min) || hasPadding(max);
+  let state = { min, max, a, b };
   let positives = [];
   let negatives = [];
 
-  let tok = {min: min, max: max, a: a, b: b};
   if (isPadded) {
-    tok.isPadded = isPadded;
-    tok.maxLen = String(tok.max).length;
+    state.isPadded = isPadded;
+    state.maxLen = String(state.max).length;
   }
 
   if (a < 0) {
     let newMin = b < 0 ? Math.abs(b) : 1;
-    let newMax = Math.abs(a);
-    negatives = splitToPatterns(newMin, newMax, tok, options);
-    a = tok.a = 0;
+    negatives = splitToPatterns(newMin, Math.abs(a), state, opts);
+    a = state.a = 0;
   }
 
   if (b >= 0) {
-    positives = splitToPatterns(a, b, tok, options);
+    positives = splitToPatterns(a, b, state, opts);
   }
 
-  tok.negatives = negatives;
-  tok.positives = positives;
-  tok.result = siftPatterns(negatives, positives, options);
+  state.negatives = negatives;
+  state.positives = positives;
+  state.result = collatePatterns(negatives, positives, opts);
 
-  if (options.capture) {
-    tok.result = '(' + tok.result + ')';
-  } else if (options.wrap !== false && positives.length + negatives.length > 1) {
-    tok.result = '(?:' + tok.result + ')';
+  if (opts.capture === true) {
+    state.result = `(${state.result})`;
+  } else if (opts.wrap !== false && (positives.length + negatives.length) > 1) {
+    state.result = `(?:${state.result})`;
   }
 
-  toRegexRange.cache[key] = tok;
-  return tok.result;
-}
+  toRegexRange.cache[cacheKey] = state;
+  return state.result;
+};
 
-toRegexRange.cache = {};
-
-function siftPatterns(neg, pos, options) {
+function collatePatterns(neg, pos, options) {
   let onlyNegative = filterPatterns(neg, pos, '-', false, options) || [];
   let onlyPositive = filterPatterns(pos, neg, '', false, options) || [];
   let intersected = filterPatterns(neg, pos, '-?', true, options) || [];
@@ -91,28 +94,27 @@ function siftPatterns(neg, pos, options) {
 }
 
 function splitToRanges(min, max) {
-  min = Number(min);
-  max = Number(max);
-
   let nines = 1;
-  let stops = [max];
-  let stop = +countNines(min, nines);
+  let zeros = 1;
+
+  let stop = countNines(min, nines);
+  let stops = new Set([max]);
 
   while (min <= stop && stop <= max) {
-    stops = push(stops, stop);
+    stops.add(stop);
     nines += 1;
-    stop = +countNines(min, nines);
+    stop = countNines(min, nines);
   }
 
-  let zeros = 1;
   stop = countZeros(max + 1, zeros) - 1;
 
   while (min < stop && stop <= max) {
-    stops = push(stops, stop);
+    stops.add(stop);
     zeros += 1;
     stop = countZeros(max + 1, zeros) - 1;
   }
 
+  stops = [...stops];
   stops.sort(compare);
   return stops;
 }
@@ -126,69 +128,64 @@ function splitToRanges(min, max) {
 
 function rangeToPattern(start, stop, options) {
   if (start === stop) {
-    return {pattern: String(start), digits: []};
+    return { pattern: start, count: [], digits: 0 };
   }
 
-  let zipped = zip(String(start), String(stop));
-  let len = zipped.length, i = -1;
-
+  let zipped = zip(start, stop);
+  let digits = zipped.length;
   let pattern = '';
-  let digits = 0;
+  let count = 0;
 
-  while (++i < len) {
-    let numbers = zipped[i];
-    let startDigit = numbers[0];
-    let stopDigit = numbers[1];
+  for (let i = 0; i < digits; i++) {
+    let [startDigit, stopDigit] = zipped[i];
 
     if (startDigit === stopDigit) {
       pattern += startDigit;
 
     } else if (startDigit !== '0' || stopDigit !== '9') {
-      pattern += toCharacterClass(startDigit, stopDigit);
+      pattern += toCharacterClass(startDigit, stopDigit, options);
 
     } else {
-      digits += 1;
+      count++;
     }
   }
 
-  if (digits) {
-    pattern += options.shorthand ? '\\d' : '[0-9]';
+  if (count) {
+    pattern += options.shorthand === true ? '\\d' : '[0-9]';
   }
 
-  return { pattern: pattern, digits: [digits] };
+  return { pattern, count: [count], digits };
 }
 
 function splitToPatterns(min, max, tok, options) {
   let ranges = splitToRanges(min, max);
-  let len = ranges.length;
-  let idx = -1;
-
   let tokens = [];
   let start = min;
   let prev;
 
-  while (++idx < len) {
-    let range = ranges[idx];
-    let obj = rangeToPattern(start, range, options);
+  for (let i = 0; i < ranges.length; i++) {
+    let max = ranges[i];
+    let obj = rangeToPattern(String(start), String(max), options);
     let zeros = '';
 
     if (!tok.isPadded && prev && prev.pattern === obj.pattern) {
-      if (prev.digits.length > 1) {
-        prev.digits.pop();
+      if (prev.count.length > 1) {
+        prev.count.pop();
       }
-      prev.digits.push(obj.digits[0]);
-      prev.string = prev.pattern + toQuantifier(prev.digits);
-      start = range + 1;
+
+      prev.count.push(obj.count[0]);
+      prev.string = prev.pattern + toQuantifier(prev.count);
+      start = max + 1;
       continue;
     }
 
     if (tok.isPadded) {
-      zeros = padZeros(range, tok);
+      zeros = padZeros(max, tok, options);
     }
 
-    obj.string = zeros + obj.pattern + toQuantifier(obj.digits);
+    obj.string = zeros + obj.pattern + toQuantifier(obj.count);
     tokens.push(obj);
-    start = range + 1;
+    start = max + 1;
     prev = obj;
   }
 
@@ -196,31 +193,22 @@ function splitToPatterns(min, max, tok, options) {
 }
 
 function filterPatterns(arr, comparison, prefix, intersection, options) {
-  let res = [];
+  let result = [];
 
-  for (let i = 0; i < arr.length; i++) {
-    let tok = arr[i];
-    let ele = tok.string;
+  for (let ele of arr) {
+    let { string } = ele;
 
-    if (options.relaxZeros !== false) {
-      if (prefix === '-' && ele.charAt(0) === '0') {
-        if (ele.charAt(1) === '{') {
-          ele = '0*' + ele.replace(/^0\{\d+\}/, '');
-        } else {
-          ele = '0*' + ele.slice(1);
-        }
-      }
+    // only push if _both_ are negative...
+    if (!intersection && !contains(comparison, 'string', string)) {
+      result.push(prefix + string);
     }
 
-    if (!intersection && !contains(comparison, 'string', ele)) {
-      res.push(prefix + ele);
-    }
-
-    if (intersection && contains(comparison, 'string', ele)) {
-      res.push(prefix + ele);
+    // or _both_ are positive
+    if (intersection && contains(comparison, 'string', string)) {
+      result.push(prefix + string);
     }
   }
-  return res;
+  return result;
 }
 
 /**
@@ -229,9 +217,7 @@ function filterPatterns(arr, comparison, prefix, intersection, options) {
 
 function zip(a, b) {
   let arr = [];
-  for (let i = 0; i < a.length; i++) {
-    arr.push([a[i], b[i]]);
-  }
+  for (let i = 0; i < a.length; i++) arr.push([a[i], b[i]]);
   return arr;
 }
 
@@ -239,22 +225,12 @@ function compare(a, b) {
   return a > b ? 1 : b > a ? -1 : 0;
 }
 
-function push(arr, ele) {
-  if (arr.indexOf(ele) === -1) arr.push(ele);
-  return arr;
-}
-
 function contains(arr, key, val) {
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i][key] === val) {
-      return true;
-    }
-  }
-  return false;
+  return arr.some(ele => ele[key] === val);
 }
 
 function countNines(min, len) {
-  return String(min).slice(0, -len) + '9'.repeat(len);
+  return Number(String(min).slice(0, -len) + '9'.repeat(len));
 }
 
 function countZeros(integer, zeros) {
@@ -262,41 +238,51 @@ function countZeros(integer, zeros) {
 }
 
 function toQuantifier(digits) {
-  let start = digits[0];
-  let stop = digits[1] ? (',' + digits[1]) : '';
-  if (!stop && (!start || start === 1)) {
-    return '';
+  let [start = 0, stop = ''] = digits;
+  if (stop || start > 1) {
+    return `{${start + (stop ? ',' + stop : '')}}`;
   }
-  return '{' + start + stop + '}';
+  return '';
 }
 
-function toCharacterClass(a, b) {
-  return '[' + a + ((b - a === 1) ? '' : '-') + b + ']';
+function toCharacterClass(a, b, options) {
+  return `[${a}${(b - a === 1) ? '' : '-'}${b}]`;
 }
 
-function padding(str) {
-  return /^-?(0+)\d/.exec(str);
+function hasPadding(str) {
+  return /^-?(0+)\d/.test(str);
 }
 
-function padZeros(val, tok) {
-  if (tok.isPadded) {
-    let diff = Math.abs(tok.maxLen - String(val).length);
-    switch (diff) {
-      case 0:
-        return '';
-      case 1:
-        return '0';
-      default: {
-        return '0{' + diff + '}';
-      }
+function padZeros(value, tok, options) {
+  if (!tok.isPadded) {
+    return value;
+  }
+
+  let diff = Math.abs(tok.maxLen - String(value).length);
+  let relax = options.relaxZeros !== false;
+
+  switch (diff) {
+    case 0:
+      return '';
+    case 1:
+      return relax ? '0?' : '0';
+    case 2:
+      return relax ? '0{0,2}' : '00';
+    default: {
+      return relax ? `0{0,${diff}}` : `0{${diff}}`;
     }
   }
-  return val;
 }
+
+/**
+ * Cache
+ */
+
+toRegexRange.cache = {};
+toRegexRange.clearCache = () => (toRegexRange.cache = {});
 
 /**
  * Expose `toRegexRange`
  */
 
-toRegexRange.clearCache = () => (toRegexRange.cache = {});
 module.exports = toRegexRange;

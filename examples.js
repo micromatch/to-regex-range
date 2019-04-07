@@ -9,18 +9,18 @@ const time = new Time();
  * $ node examples.js
  */
 
-function toRange(min, max) {
+const toRange = (min, max) => {
   let key = 'to-range' + min + max;
   time.start(key);
-  let str = toRegexRange(min, max, { wrap: false });
+
   return [
     '',
-    '`toRegexRange(\'' + min + ', ' + max + '\')`',
-    '`' + str.split('|').join('\\|') + '`',
-    '_' + time.end(key) + '_',
+    `\`toRegexRange(${min}, ${max})\``,
+    `\`${toRegexRange(min, max, { wrap: false }).split('|').join('\\|')}\``,
+    `_${time.end(key)}_`,
     ''
   ];
-}
+};
 
 toRange('1', '3');
 
@@ -30,22 +30,24 @@ let rows = [
 ];
 
 let examples = [
-  // ['0001', '5555'],
-  // ['1', '5555'],
-  // ['1', '555'],
-  // ['1', '55'],
-  // ['1', '50'],
-
-  ['5', '5'],
-  ['5', '6'],
-  ['29', '51'],
-  ['31', '877'],
-  ['111', '555'],
   ['-10', '10'],
   ['-100', '-10'],
   ['-100', '100'],
+
   ['001', '100'],
+  ['001', '555'],
   ['0010', '1000'],
+
+  ['1', '50'],
+  ['1', '55'],
+  ['1', '555'],
+  ['1', '5555'],
+  ['111', '555'],
+  ['29', '51'],
+  ['31', '877'],
+
+  ['5', '5'],
+  ['5', '6'],
   ['1', '2'],
   ['1', '5'],
   ['1', '10'],
@@ -55,7 +57,7 @@ let examples = [
   ['1', '100000'],
   ['1', '1000000'],
   ['1', '10000000'],
-].forEach(function(args) {
+].forEach(args => {
   rows.push(toRange.apply(null, args));
 });
 
@@ -67,8 +69,7 @@ console.log(text);
  * by verb and used in the .verb.md readme template
  */
 
-module.exports = function() {
-  return text.split('\n').map(function(line) {
-    return line.replace(/^ +/, '');
-  }).join('\n');
+module.exports = () => {
+  return text.split('\n').map(line => line.replace(/^ +/, '')).join('\n');
 };
+
