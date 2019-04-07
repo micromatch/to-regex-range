@@ -1,7 +1,7 @@
 {
   "name": "to-regex-range",
   "description": "Pass two numbers, get a regex-compatible source string for matching ranges. Validated against more than 2.78 million test assertions.",
-  "version": "4.0.3",
+  "version": "5.0.0",
   "homepage": "https://github.com/micromatch/to-regex-range",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
@@ -18,7 +18,7 @@
   ],
   "main": "index.js",
   "engines": {
-    "node": ">=4.0"
+    "node": ">=8.0"
   },
   "scripts": {
     "test": "mocha"
@@ -29,31 +29,34 @@
   "devDependencies": {
     "fill-range": "^6.0.0",
     "gulp-format-md": "^2.0.0",
-    "mocha": "^5.2.0",
+    "mocha": "^6.0.2",
     "text-table": "^0.2.0",
     "time-diff": "^0.3.1"
   },
   "keywords": [
-    "alpha",
-    "alphabetical",
     "bash",
-    "brace",
     "date",
     "expand",
     "expansion",
+    "expression",
     "glob",
     "match",
+    "match date",
+    "match number",
+    "match numbers",
+    "match year",
     "matches",
     "matching",
     "number",
+    "numbers",
     "numerical",
     "range",
     "ranges",
     "regex",
-    "sequence",
-    "sh",
-    "to",
-    "year"
+    "regexp",
+    "regular",
+    "regular expression",
+    "sequence"
   ],
   "verb": {
     "layout": "default",
@@ -68,7 +71,9 @@
       "reflinks": true
     },
     "helpers": {
-      "examples": "./examples.js"
+      "examples": {
+        "displayName": "examples"
+      }
     },
     "related": {
       "list": [
