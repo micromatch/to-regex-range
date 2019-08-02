@@ -17,7 +17,7 @@ $ npm install --save to-regex-range
 
 <br>
 
-This libary generates the `source` string to be passed to `new RegExp()` for matching a range of numbers.
+This library generates the `source` string to be passed to `new RegExp()` for matching a range of numbers.
 
 **Example**
 
