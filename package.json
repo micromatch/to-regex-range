@@ -24,7 +24,6 @@
     "test": "mocha"
   },
   "dependencies": {
-    "is-number": "^7.0.0"
   },
   "devDependencies": {
     "fill-range": "^6.0.0",
