@@ -7,7 +7,7 @@
 
 'use strict';
 
-const isNumber = require('is-number');
+const isNumber = (v) => typeof v === "number" || (typeof v === "string" && Number.isFinite(+v))
 
 const toRegexRange = (min, max, options) => {
   if (isNumber(min) === false) {
