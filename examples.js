@@ -16,7 +16,7 @@ const toRange = (min, max) => {
   return [
     '',
     `\`toRegexRange(${min}, ${max})\``,
-    `\`${toRegexRange(min, max, { wrap: false }).split('|').join('\\|')}\``,
+    `\`${toRegexRange(min, max).split('|').join('\\|')}\``,
     `_${time.end(key)}_`,
     ''
   ];
