@@ -7,7 +7,7 @@
 
 'use strict';
 
-const isNumber = (v) => typeof v === "number" || (typeof v === "string" && Number.isFinite(+v) && v.trim() !== "");
+const isNumber = (v) => (typeof v === "number" && v - v === 0) || (typeof v === "string" && Number.isFinite(+v) && v.trim() !== "");
 
 const toRegexRange = (min, max, options) => {
   if (isNumber(min) === false) {
