@@ -1,0 +1,30 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  run-tests:
+    name: Run tests on Node.js v${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        # Note: `npm ci` is faster and more reliable than `npm install` for CI,
+        # but it is not compatible with older versions of Node.js that we still support.
+        run: npm install
+
+      - name: Run tests
+        run: npm run test
