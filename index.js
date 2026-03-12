@@ -22,6 +22,31 @@ const toRegexRange = (min, max, options) => {
     throw new TypeError('toRegexRange: expected the second argument to be a number.');
   }
 
+  // Coerce floats to the nearest integers within the range
+  let minNum = Number(min);
+  let maxNum = Number(max);
+  let lo = Math.min(minNum, maxNum);
+  let hi = Math.max(minNum, maxNum);
+  let hasFloat = !Number.isInteger(lo) || !Number.isInteger(hi);
+
+  if (hasFloat) {
+    lo = Math.ceil(lo);
+    hi = Math.floor(hi);
+
+    if (lo > hi) {
+      throw new RangeError('toRegexRange: no integers exist within the given float range');
+    }
+
+    // Preserve original min/max ordering (min could be > max)
+    if (minNum <= maxNum) {
+      min = typeof min === 'string' ? String(lo) : lo;
+      max = typeof max === 'string' ? String(hi) : hi;
+    } else {
+      min = typeof min === 'string' ? String(hi) : hi;
+      max = typeof max === 'string' ? String(lo) : lo;
+    }
+  }
+
   let opts = { relaxZeros: true, ...options };
   if (typeof opts.strictZeros === 'boolean') {
     opts.relaxZeros = opts.strictZeros === false;
