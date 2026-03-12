@@ -113,6 +113,57 @@ describe('to-regex-range', () => {
     });
   });
 
+  describe('float handling', () => {
+    it('should coerce float min/max to nearest integers within range', () => {
+      assert.equal(toRange(1.5, 9.5), '[2-9]');
+      assert.equal(toRange(0.1, 5.9), '[1-5]');
+      assert.equal(toRange(1.0, 1.9), '1');
+      assert.equal(toRange(0.5, 10.5), '(?:[1-9]|10)');
+    });
+
+    it('should handle negative floats', () => {
+      assert.equal(toRange(-3.7, 2.1), '(?:-[1-3]|[0-2])');
+      assert.equal(toRange(-9.9, -1.1), '-[2-9]');
+      assert.equal(toRange(-5.5, -0.5), '-[1-5]');
+    });
+
+    it('should handle string floats', () => {
+      assert.equal(toRange('1.5', '9.5'), '[2-9]');
+      assert.equal(toRange('0.1', '5.9'), '[1-5]');
+    });
+
+    it('should handle floats where one bound is already an integer', () => {
+      assert.equal(toRange(1, 9.5), '[1-9]');
+      assert.equal(toRange(1.5, 9), '[2-9]');
+    });
+
+    it('should handle reversed float ranges', () => {
+      assert.equal(toRange(9.5, 1.5), '[2-9]');
+      assert.equal(toRange(5.9, 0.1), '[1-5]');
+    });
+
+    it('should throw when no integers exist within the float range', () => {
+      assert.throws(() => toRange(1.2, 1.8), /no integers exist/);
+      assert.throws(() => toRange(0.1, 0.9), /no integers exist/);
+      assert.throws(() => toRange('0.1', '0.9'), /no integers exist/);
+    });
+
+    it('should produce valid regex patterns for float inputs', () => {
+      let re = toRegex(toRange(1.5, 9.5));
+      assert(re.test('2'));
+      assert(re.test('9'));
+      assert(!re.test('1'));
+      assert(!re.test('10'));
+
+      let re2 = toRegex(toRange(-3.7, 2.1));
+      assert(re2.test('-3'));
+      assert(re2.test('0'));
+      assert(re2.test('2'));
+      assert(!re2.test('-4'));
+      assert(!re2.test('3'));
+    });
+  });
+
   describe('minimum / maximum', () => {
     it('should reverse `min/max` when the min is larger than the max:', () => {
       assert.equal(toRange(55, 10), '(?:1[0-9]|[2-4][0-9]|5[0-5])');
