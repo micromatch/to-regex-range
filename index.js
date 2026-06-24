@@ -40,7 +40,9 @@ const toRegexRange = (min, max, options) => {
   let a = Math.min(min, max);
   let b = Math.max(min, max);
 
-  if (Math.abs(a - b) === 1) {
+  let isPadded = hasPadding(min) || hasPadding(max);
+
+  if (!isPadded && Math.abs(a - b) === 1) {
     let result = min + '|' + max;
     if (opts.capture) {
       return `(${result})`;
@@ -51,7 +53,6 @@ const toRegexRange = (min, max, options) => {
     return `(?:${result})`;
   }
 
-  let isPadded = hasPadding(min) || hasPadding(max);
   let state = { min, max, a, b };
   let positives = [];
   let negatives = [];

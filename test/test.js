@@ -156,6 +156,16 @@ describe('to-regex-range', () => {
       assert.equal(toRange('0001', '1000'), '(?:0{0,3}[1-9]|0{0,2}[1-9][0-9]|0?[1-9][0-9]{2}|1000)');
     });
 
+    it('should relax leading zero for adjacent padded ranges:', () => {
+      let re = toRegex(toRange('03', '04'));
+      assert(re.test('3'), 'should match "3"');
+      assert(re.test('03'), 'should match "03"');
+      assert(re.test('4'), 'should match "4"');
+      assert(re.test('04'), 'should match "04"');
+      assert(!re.test('5'), 'should not match "5"');
+      assert(!re.test('30'), 'should not match "30"');
+    });
+
     it('should work when padding is imbalanced:', () => {
       assert.equal(toRange('001', '105'), '(?:0{0,2}[1-9]|0?[1-9][0-9]|10[0-5])');
       assert.equal(toRange('01', '105'), '(?:0{0,2}[1-9]|0?[1-9][0-9]|10[0-5])');
