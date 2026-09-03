@@ -361,6 +361,14 @@ describe('to-regex-range', () => {
       verifyZeros('0001', '1000', '-010', '1000');
     });
 
+    it('should not ignore padding on the first argument when it has more digits than the second:', () => {
+      let regex = toRegex(toRange('00004', '13'));
+      assert(regex.test('00004'), 'should match the padded min value');
+      assert(regex.test('4'), 'should match the unpadded min value');
+      assert(regex.test('13'), 'should match the max value');
+      assert(!regex.test('00014'), 'should not match a value outside the range');
+    });
+
     it('should create valid regex ranges with negative padding:', () => {
       verifyZeros('-00001', '-1000', -1000, 1000);
       verifyZeros('-0001', '-1000', -1000, 1000);
