@@ -58,7 +58,7 @@ const toRegexRange = (min, max, options) => {
 
   if (isPadded) {
     state.isPadded = isPadded;
-    state.maxLen = String(state.max).length;
+    state.maxLen = Math.max(String(state.min).length, String(state.max).length);
   }
 
   if (a < 0) {
