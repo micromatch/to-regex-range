@@ -382,3 +382,13 @@ describe('to-regex-range', () => {
     });
   });
 });
+
+describe('negative-only strict padding', () => {
+  it('excludes the sign from the digit width', () => {
+    for (const [start, end] of [['-05', '-01'], ['-01', '-05']]) {
+      const regex = new RegExp(`^(?:${toRange(start, end, { strictZeros: true })})$`);
+      for (const value of ['-01', '-03', '-05']) assert(regex.test(value), value);
+      for (const value of ['-1', '-001', '01', '-06']) assert(!regex.test(value), value);
+    }
+  });
+});
