@@ -392,3 +392,42 @@ describe('negative-only strict padding', () => {
     }
   });
 });
+
+describe('negative padded endpoints wider than the minimum width', () => {
+  it('matches wider endpoints without adding zeros', () => {
+    for (const endpoint of ['-100', '-999']) {
+      for (const pair of [[endpoint, '-01'], ['-01', endpoint]]) {
+        for (const options of [{}, { strictZeros: true }]) {
+          const regex = new RegExp(`^(?:${toRange(...pair, options)})$`);
+          assert(regex.test(endpoint), `${pair}: ${endpoint}`);
+          assert(!regex.test('-0' + endpoint.slice(1)), `${pair}: excessive padding`);
+        }
+      }
+    }
+  });
+
+  it('retains padding controls for negative-only ranges', () => {
+    for (const pair of [['-05', '-01'], ['-01', '-05']]) {
+      for (const options of [{}, { strictZeros: true }]) {
+        const regex = new RegExp(`^(?:${toRange(...pair, options)})$`);
+        assert(regex.test('-01'));
+        assert(regex.test('-05'));
+        assert.equal(regex.test('-1'), options.strictZeros !== true);
+        assert(!regex.test('-001'));
+      }
+    }
+  });
+});
+
+describe('positive and mixed padding controls', () => {
+  it('preserves existing padding in either endpoint order', () => {
+    for (const pair of [['001', '005'], ['005', '001']]) {
+      assert.equal(toRange(...pair), '0{0,2}[1-5]');
+      assert.equal(toRange(...pair, { strictZeros: true }), '00[1-5]');
+    }
+    for (const pair of [['-05', '005'], ['005', '-05']]) {
+      assert.equal(toRange(...pair), '(?:-0{0,2}[1-5]|0{0,2}[0-5])');
+      assert.equal(toRange(...pair, { strictZeros: true }), '(?:-00[1-5]|00[0-5])');
+    }
+  });
+});

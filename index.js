@@ -58,7 +58,7 @@ const toRegexRange = (min, max, options) => {
 
   if (isPadded) {
     state.isPadded = isPadded;
-    state.maxLen = String(state.max).replace(/^-/, '').length;
+    state.maxLen = String(state.max).length - (b < 0 ? 1 : 0);
   }
 
   if (a < 0) {
@@ -258,7 +258,8 @@ function padZeros(value, tok, options) {
     return value;
   }
 
-  let diff = Math.abs(tok.maxLen - String(value).length);
+  let diff = tok.maxLen - String(value).length;
+  diff = tok.b < 0 ? Math.max(0, diff) : Math.abs(diff);
   let relax = options.relaxZeros !== false;
 
   switch (diff) {
